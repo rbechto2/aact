@@ -15,7 +15,7 @@ DKGREEN = (0, 100, 0)
 def add_border(image_path, color):
     img = Image.open(image_path)
     img_with_border = ImageOps.expand(img, border=75, fill=color)
-    img_with_border.save('images/current_figure.jpg')
+    img_with_border.save('../images/current_figure.jpg')
 
 
 pygame.init()
@@ -25,7 +25,7 @@ screen = pygame.display.set_mode()
 size = screen.get_size()
 center_rect = screen.get_rect()
 
-gaze_target = pygame.image.load("images/plus_symbol.png").convert()
+gaze_target = pygame.image.load("../images/plus_symbol.png").convert()
 gaze_target = pygame.transform.scale(gaze_target, (25, 25))
 gaze_rect = gaze_target.get_rect()
 screen.blit(gaze_target, np.array(center_rect.center) -
@@ -36,8 +36,8 @@ time.sleep(.3)
 is_end_of_trial = False
 count = 0
 
-trials = ["images/neutral1.jpg", "images/prov1.jpg", "images/neutral2.jpg", "images/prov2.jpg",
-          "images/neutral1.jpg", "images/prov1.jpg", "images/neutral2.jpg", "images/prov2.jpg"]
+trials = ["../images/neutral1.jpg", "../images/prov1.jpg", "../images/neutral2.jpg", "../images/prov2.jpg",
+          "../images/neutral1.jpg", "../images/prov1.jpg", "../images/neutral2.jpg", "../images/prov2.jpg"]
 trial_colors = ['BLUE', 'BLUE', 'GREEN',
                 'GREEN', 'BLUE', 'BLUE', 'GREEN', 'GREEN']
 for i in range(len(trials)):
@@ -59,14 +59,13 @@ for i in range(len(trials)):
 
         pos = pygame.mouse.get_pos()
         y = pos[1]
-        print(y)
         if y <= 50:
             y = 50
         elif y >= 1000:
             y = 1000
 
         # Draw a solid blue circle in the center
-        image = pygame.image.load("images/current_figure.jpg").convert()
+        image = pygame.image.load("../images/current_figure.jpg").convert()
         image = pygame.transform.scale(image, (y, y))
         image_rect = image.get_rect()
         screen.blit(image, np.array(center_rect.center) -
@@ -84,7 +83,7 @@ for i in range(len(trials)):
                         np.array([image_rect.w, image_rect.h])/2)
             pygame.display.update()
             time.sleep(.3)
-            gaze_target = pygame.image.load("images/plus_symbol.png").convert()
+            gaze_target = pygame.image.load("../images/plus_symbol.png").convert()
             gaze_target = pygame.transform.scale(gaze_target, (25, 25))
             gaze_rect = gaze_target.get_rect()
             screen.blit(gaze_target, np.array(center_rect.center) -
