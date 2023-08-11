@@ -1,6 +1,5 @@
 import pygame
 import numpy as np
-import time
 from utils import *
 
 pygame.init()
@@ -8,10 +7,10 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 size = screen.get_size()
 shape_size = 500
+num_of_trials = 5
 
 # Prompt Wait to Start
-font = pygame.font.SysFont("Arial", 36)
-txtsurf = font.render("Press Space to Begin", True, WHITE)
+txtsurf = FONT.render("Press Space to Begin", True, WHITE)
 screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() /
             2, (size[0]/2 - txtsurf.get_height()) / 2))
 pygame.display.update()
@@ -44,11 +43,12 @@ current_state = state_machine[0]
 trial_selection = None
 key_pressed = ''
 points = 0
+trial_count = 0
 
 active = True
 while active:
     # limit frames per second
-    clock.tick(100)
+    clock.tick(60)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -68,20 +68,27 @@ while active:
     if not started_task:
         continue
 
+    #Check if End of Task
+    if trial_count > num_of_trials:
+        active = False
+        break
+
     if current_state == state_machine[0]:  # If start state\
+        trial_count = trial_count + 1
+        trial_selection = None
         screen.fill(BLACK)
-        # Display score on top left corner  
-        font = pygame.font.SysFont("Arial", 36)
-        txtsurf = font.render("Points: " + str(points), True, WHITE)
-        screen.blit(txtsurf, (25,25))
+        # Display score on top left corner
+        update_displayed_points(screen, points)
         gaze_target = pygame.image.load("../images/plus_symbol.png").convert()
         gaze_target = pygame.transform.scale(gaze_target, (25, 25))
         gaze_rect = gaze_target.get_rect()
-        screen.blit(gaze_target, np.array(screen.get_rect().center) - np.array([gaze_rect.w, gaze_rect.h])/2)
+        screen.blit(gaze_target, np.array(screen.get_rect().center) -
+                    np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
         pygame.time.wait(500)
+        screen.fill(BLACK)
+        update_displayed_points(screen, points)
         current_state = state_machine[1]  # Update state to Decision State
-        gaze_target.fill(BLACK)
 
     elif current_state == state_machine[1]:  # If decision state
         draw_circle(screen, BLUE, circle_coords,
@@ -96,6 +103,7 @@ while active:
                         shape_size/2, True)
             current_state = state_machine[2]
             trial_selection = 0
+            pygame.display.update()
             pygame.time.wait(500)
             draw_circle(screen, BLACK, circle_coords, shape_size/2)
 
@@ -104,6 +112,7 @@ while active:
                 square_coords, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2)), True)
             current_state = state_machine[2]
             trial_selection = 1
+            pygame.display.update()
             pygame.time.wait(500)
             draw_square(screen, BLACK, pygame.Rect(
                 square_coords, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2)))
@@ -113,6 +122,7 @@ while active:
                 screen, RED, hexagon_coords[0], hexagon_coords[1], shape_size/2, True)
             current_state = state_machine[2]
             trial_selection = 2
+            pygame.display.update()
             pygame.time.wait(500)
             draw_hexagon(
                 screen, BLACK, hexagon_coords[0], hexagon_coords[1], shape_size/2)
@@ -126,21 +136,25 @@ while active:
         image_rect = image.get_rect()
         screen.blit(
             image, main_center_coords[trial_selection, :] - np.array([image_rect.w, image_rect.h-2*constant_shift])/2)
+        pygame.display.update()
+        pygame.time.wait(500)  # TODO Add jitter to stimulus display time
         current_state = state_machine[3]
 
     elif current_state == state_machine[3]:  # If Reward state
-        pygame.time.wait(1000)
-        current_state = state_machine[0]
-        image.fill(BLACK)
-        screen.blit(image, main_center_coords[trial_selection, :] - np.array(
-            [image_rect.w, image_rect.h-2*constant_shift])/2)
-        pygame.draw.rect(screen, BLACK, pygame.Rect(25,25, txtsurf.get_width(), txtsurf.get_height()))  # Clear previous score
-        points = points + generate_trial_points()
-        txtsurf = font.render("Points: " + str(points), True, WHITE)
-        screen.blit(txtsurf, (25, 25))
+        trial_points = generate_trial_points()
+        points = points + trial_points
+        update_displayed_points(screen, points)
+        reward_text_surf = FONT.render(
+            "You Win " + str(trial_points) + " Points!", True, WHITE)
+        screen.blit(reward_text_surf, main_center_coords[trial_selection]-np.array(
+            reward_text_surf.get_rect().center)+np.array([0, shape_size/2]))
         pygame.display.update()
+        pygame.time.wait(500)  # TODO Add jitter to reward display
+        current_state = state_machine[0]
 
     pygame.display.update()
+
+
 
 
 pygame.quit()
