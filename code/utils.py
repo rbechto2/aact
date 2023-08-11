@@ -2,6 +2,8 @@ import pygame
 import math
 import numpy as np
 
+pygame.init()
+
 # Define some constants
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -12,6 +14,9 @@ BLUE = (50, 50, 255)
 DKGREEN = (0, 100, 0)
 BORDER_SIZE = 20
 NUM_SIDES = 6
+TRANSPARENT = (0, 0, 0, 0)
+
+FONT = pygame.font.SysFont("Arial", 36)
 
 def generate_block():
     print('Make this create to x number of trials')
@@ -28,14 +33,12 @@ def draw_circle(surf, color, coords, radius, border=False):
     pygame.draw.circle(surf, color, coords, radius)
     if border:
         pygame.draw.circle(surf, YELLOW, coords, radius, BORDER_SIZE)
-    pygame.display.update()
 
 
 def draw_square(surf, color, rect, border=False):
     pygame.draw.rect(surf, color, rect)
     if border:
         pygame.draw.rect(surf, YELLOW, rect, BORDER_SIZE)
-    pygame.display.update()
 
 def draw_hexagon(surf, color, x, y, radius, border=False):
     pts = get_hexagon_pts(x, y, radius)
@@ -49,7 +52,14 @@ def draw_hexagon(surf, color, x, y, radius, border=False):
         inner_pts = get_hexagon_pts(
             hexagon_center_offset[0], hexagon_center_offset[1], radius-BORDER_SIZE)
         pygame.draw.polygon(surf, color, inner_pts)
-    pygame.display.update()
 
 def generate_trial_points():
     return 1
+
+def update_displayed_points(screen,points):
+        txtsurf = FONT.render("Points: " + str(points), True, WHITE)
+        points_coordinates = np.array([25,screen.get_height()-txtsurf.get_height()-25])
+        pygame.draw.rect(screen, BLACK, pygame.Rect(points_coordinates, [txtsurf.get_width(), txtsurf.get_height()]))  # Clear previous score
+        screen.blit(txtsurf, points_coordinates)
+        pygame.display.update()
+        
