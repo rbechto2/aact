@@ -64,7 +64,7 @@ for i in range(len(trials)):
         elif y >= 1000:
             y = 1000
 
-        # Draw a solid blue circle in the center
+       
         image = pygame.image.load("../images/current_figure.jpg").convert()
         image = pygame.transform.scale(image, (y, y))
         image_rect = image.get_rect()
