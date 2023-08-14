@@ -3,47 +3,36 @@ import numpy as np
 from utils import *
 
 pygame.init()
-clock = pygame.time.Clock()
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-size = screen.get_size()
-shape_size = 500
-num_of_trials = 5
+blocks = 2  # Make even so equal number of congruent and conflict blocks
+block_order = randomize_blocks(blocks)
+block_types = ['congruent', 'conflict']
+num_of_trials = 25
+started_block = False
+print(reward_conflict_prob)
 
-# Prompt Wait to Start
-txtsurf = FONT.render("Press Space to Begin", True, WHITE)
-screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() /
-            2, (size[0]/2 - txtsurf.get_height()) / 2))
-pygame.display.update()
-started_task = False
-
-# Position on the screen where the center of the 3 objects should be (middle-left, top-middle, middle-right)
-main_center_coords = np.array(
-    [[size[0]/4, 2*size[1]/3], [size[0]/2, size[1]/4], [3*size[0]/4, 2*size[1]/3]])
-
-# size[1]/20  # Just to make the objects look nicely centered
-constant_shift = 0
 # provides offset so center of object is at desired coordinates
-circle_center_offset = np.array([0, - constant_shift])
+circle_center_offset = np.array([0, 0])
 circle_coords = main_center_coords[0, :] - circle_center_offset
 
 
 # provides offset so center of object is at desired coordinates
 square_center_offset = np.array(
-    [math.sqrt(3)*shape_size/4, math.sqrt(3)*shape_size/4 - constant_shift])
+    [math.sqrt(3)*shape_size/4, math.sqrt(3)*shape_size/4])
 square_coords = main_center_coords[1, :] - square_center_offset
 
 
 # provides offset so center of object is at desired coordinates
 hexagon_center_offset = np.array(
-    [-math.sqrt(3)*shape_size/4, (shape_size/4 - constant_shift)])
+    [-math.sqrt(3)*shape_size/4, (shape_size/4)])
 hexagon_coords = main_center_coords[2, :] - hexagon_center_offset
 
-state_machine = ['start', 'decision', 'stimulus', 'reward']
+state_machine = ['start', 'decision', 'stimulus', 'reward', 'wait']
 current_state = state_machine[0]
 trial_selection = None
 key_pressed = ''
 points = 0
 trial_count = 0
+block_number = 1
 
 active = True
 while active:
@@ -56,8 +45,8 @@ while active:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 active = False  # Set running to False to end the while loop.
-            elif not started_task and event.key == pygame.K_SPACE:
-                started_task = True
+            elif not started_block and event.key == pygame.K_SPACE:
+                started_block = True
             elif event.key == pygame.K_a and current_state == state_machine[1]:
                 key_pressed = 'a'
             elif event.key == pygame.K_s and current_state == state_machine[1]:
@@ -65,13 +54,26 @@ while active:
             elif event.key == pygame.K_d and current_state == state_machine[1]:
                 key_pressed = 'd'
 
-    if not started_task:
+    if block_number > blocks:
+        break  # Task Over
+
+    if not started_block:
+        # Prompt Wait to Start
+        screen.fill(BLACK)
+        txtsurf = FONT.render(
+            "Press Space to Begin Block " + str(block_number), True, WHITE)
+        screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() /
+                    2, (size[0]/2 - txtsurf.get_height()) / 2))
+        pygame.display.update()
         continue
 
-    #Check if End of Task
+    # Check if End of Block
     if trial_count > num_of_trials:
-        active = False
-        break
+        trial_count = 0
+        started_block = False
+        block_number = block_number + 1
+        current_state = state_machine[0]
+        continue
 
     if current_state == state_machine[0]:  # If start state\
         trial_count = trial_count + 1
@@ -130,18 +132,14 @@ while active:
         key_pressed = ''
 
     elif current_state == state_machine[2]:  # If Stimulus state
-        image = pygame.image.load("../images/prov1.jpg").convert()
-        image = pygame.transform.scale(
-            image, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2))
-        image_rect = image.get_rect()
-        screen.blit(
-            image, main_center_coords[trial_selection, :] - np.array([image_rect.w, image_rect.h-2*constant_shift])/2)
+        display_stimulus(screen, block_order[block_number-1], trial_selection)
         pygame.display.update()
         pygame.time.wait(500)  # TODO Add jitter to stimulus display time
         current_state = state_machine[3]
 
     elif current_state == state_machine[3]:  # If Reward state
-        trial_points = generate_trial_points()
+        trial_points = generate_trial_points(
+            block_order[block_number-1], trial_selection)
         points = points + trial_points
         update_displayed_points(screen, points)
         reward_text_surf = FONT.render(
@@ -153,8 +151,6 @@ while active:
         current_state = state_machine[0]
 
     pygame.display.update()
-
-
 
 
 pygame.quit()
