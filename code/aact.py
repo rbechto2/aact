@@ -2,13 +2,16 @@ import pygame
 import numpy as np
 from utils import *
 
+#TODO Add "neg images" count?
+#TODO Add photodiode square
+#TODO Add logging
+
 pygame.init()
 blocks = 2  # Make even so equal number of congruent and conflict blocks
 block_order = randomize_blocks(blocks)
 block_types = ['congruent', 'conflict']
 num_of_trials = 25
 started_block = False
-print(reward_conflict_prob)
 
 # provides offset so center of object is at desired coordinates
 circle_center_offset = np.array([0, 0])
@@ -36,7 +39,7 @@ block_number = 1
 
 active = True
 while active:
-    # limit frames per second
+    # limit to 60 frames per second
     clock.tick(60)
 
     for event in pygame.event.get():
@@ -75,7 +78,7 @@ while active:
         current_state = state_machine[0]
         continue
 
-    if current_state == state_machine[0]:  # If start state\
+    if current_state == state_machine[0]:  # If start state
         trial_count = trial_count + 1
         trial_selection = None
         screen.fill(BLACK)
@@ -87,10 +90,12 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        pygame.time.wait(500)
+        fixed_gaze_duration = random.randrange(500,1500,5) #Jitter stimulus presentation (.5s-1.5s)
+        pygame.time.wait(fixed_gaze_duration)
         screen.fill(BLACK)
         update_displayed_points(screen, points)
         current_state = state_machine[1]  # Update state to Decision State
+        pygame.event.clear()
 
     elif current_state == state_machine[1]:  # If decision state
         draw_circle(screen, BLUE, circle_coords,
@@ -134,7 +139,8 @@ while active:
     elif current_state == state_machine[2]:  # If Stimulus state
         display_stimulus(screen, block_order[block_number-1], trial_selection)
         pygame.display.update()
-        pygame.time.wait(500)  # TODO Add jitter to stimulus display time
+        stimulus_duration = random.randrange(1500,2500,5) #Jitter stimulus presentation (1.5s-2.5s)
+        pygame.time.wait(stimulus_duration)
         current_state = state_machine[3]
 
     elif current_state == state_machine[3]:  # If Reward state
@@ -147,7 +153,8 @@ while active:
         screen.blit(reward_text_surf, main_center_coords[trial_selection]-np.array(
             reward_text_surf.get_rect().center)+np.array([0, shape_size/2]))
         pygame.display.update()
-        pygame.time.wait(500)  # TODO Add jitter to reward display
+        points_display_duration = random.randrange(500,750,5) #Jitter stimulus presentation (.5s-.75s)
+        pygame.time.wait(points_display_duration)
         current_state = state_machine[0]
 
     pygame.display.update()

@@ -88,7 +88,6 @@ def generate_trial_points(block_type, shape):
     sign = np.random.choice(
         [1, -1], p=[trial_reward_prob, 1-trial_reward_prob])
     points = sign * random.randint(1, 10)
-    print(block_type, shape, points)
     return points
 
 
