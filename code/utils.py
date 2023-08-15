@@ -110,6 +110,5 @@ def update_displayed_points(screen, points):
     points_coordinates = np.array(
         [25, screen.get_height()-txtsurf.get_height()-25])
     pygame.draw.rect(screen, BLACK, pygame.Rect(points_coordinates, [
-                     txtsurf.get_width(), txtsurf.get_height()]))  # Clear previous score
+                     txtsurf.get_width()+60, txtsurf.get_height()]))  # Clear previous score
     screen.blit(txtsurf, points_coordinates)
-    pygame.display.update()
