@@ -28,7 +28,7 @@ size = screen.get_size()
 # Position on the screen where the center of the 3 objects should be (middle-left, top-middle, middle-right)
 main_center_coords = np.array(
     [[size[0]/4, 2*size[1]/3], [size[0]/2, size[1]/4], [3*size[0]/4, 2*size[1]/3]])
-shape_size = 500
+shape_size = 500 #TODO make proportional to size of screen 
 
 
 def generate_block(trials, blocks):
@@ -101,11 +101,10 @@ def display_trial_points(screen,points,selection):
         color = RED
         sign = ''
 
-    txtsurf = FONT.render(sign + str(points), True, color)
+    point_font = pygame.font.SysFont("Arial", 256)
+    txtsurf = point_font.render(sign + str(points), True, color)
 
     points_coordinates = np.array(main_center_coords[selection]) - np.array(txtsurf.get_size())/2
-    pygame.draw.rect(screen, BLACK, pygame.Rect(points_coordinates, [
-                     txtsurf.get_width()+60, txtsurf.get_height()]))  # Clear previous score
     screen.blit(txtsurf, points_coordinates)
 
 
@@ -125,7 +124,8 @@ def display_stimulus(screen, block, shape):
 
 def update_displayed_points(screen, points):
     txtsurf = FONT.render("You have " + str(points) + " points", True, WHITE)
-    points_coordinates = np.array([screen.get_rect().w/2,screen.get_rect().h-200]) - np.array(txtsurf.get_size())/2
+    #points_coordinates = np.array([screen.get_rect().w/2,screen.get_rect().h-200]) - np.array(txtsurf.get_size())/2
+    points_coordinates = np.array(screen.get_rect().center)  - np.array(txtsurf.get_size())/2
     pygame.draw.rect(screen, BLACK, pygame.Rect(points_coordinates, [
                      txtsurf.get_width()+60, txtsurf.get_height()]))  # Clear previous score
     screen.blit(txtsurf, points_coordinates)
