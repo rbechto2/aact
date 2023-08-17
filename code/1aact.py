@@ -2,9 +2,9 @@ import pygame
 import numpy as np
 from utils2 import *
 
-#TODO Add "neg images" count?
-#TODO Add photodiode square
-#TODO Add logging
+# TODO Add "neg images" count?
+# TODO Add photodiode square
+# TODO Add logging
 
 pygame.init()
 blocks = 2  # Make even so equal number of congruent and conflict blocks
@@ -29,7 +29,8 @@ hexagon_center_offset = np.array(
     [-math.sqrt(3)*shape_size/4, (shape_size/4)])
 hexagon_coords = main_center_coords[2, :] - hexagon_center_offset
 
-state_machine = ['start', 'decision', 'stimulus_anticipation','stimulus', 'reward_anticipation','reward']#state_machine = ['start', 'decision', 'stimulus', 'reward', 'wait']
+state_machine = ['start', 'decision', 'stimulus_anticipation',
+                 'stimulus', 'reward_anticipation', 'reward']
 current_state = state_machine[0]
 trial_selection = None
 is_anticipation = False
@@ -84,20 +85,20 @@ while active:
         trial_selection = None
         screen.fill(BLACK)
         # Display score on top left corner
-        #update_displayed_points(screen, points)
+        # update_displayed_points(screen, points)
         gaze_target = pygame.image.load("../images/plus_symbol.png").convert()
         gaze_target = pygame.transform.scale(gaze_target, (25, 25))
         gaze_rect = gaze_target.get_rect()
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        fixed_gaze_duration = random.randrange(500,1500,5) #Jitter stimulus presentation (.5s-1.5s)
-        pygame.time.wait(fixed_gaze_duration)
+        # Jitter stimulus presentation (.5s-1.5s)
+        fixed_gaze_duration = random.randrange(500, 1500, 5)
+        pygame.time.delay(fixed_gaze_duration)
         screen.fill(BLACK)
         update_displayed_points(screen, points)
         current_state = state_machine[1]  # Update state to Decision State
         pygame.event.clear()
-
 
     elif current_state == state_machine[1]:  # If decision state
         draw_circle(screen, GREEN, circle_coords,
@@ -113,7 +114,7 @@ while active:
             current_state = state_machine[2]
             trial_selection = 0
             pygame.display.update()
-            pygame.time.wait(500)
+            pygame.time.delay(500)
 
         elif key_pressed == 's':
             draw_square(screen, BLUE, pygame.Rect(
@@ -121,7 +122,7 @@ while active:
             current_state = state_machine[2]
             trial_selection = 1
             pygame.display.update()
-            pygame.time.wait(500)
+            pygame.time.delay(500)
 
         elif key_pressed == 'd':
             draw_hexagon(
@@ -129,8 +130,7 @@ while active:
             current_state = state_machine[2]
             trial_selection = 2
             pygame.display.update()
-            pygame.time.wait(500)
-
+            pygame.time.delay(500)
 
         key_pressed = ''
 
@@ -142,18 +142,19 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        anticipation_fixed_gaze_duration = random.randrange(500,1500,5) #Jitter stimulus presentation (.5s-1.5s)
-        pygame.time.wait(anticipation_fixed_gaze_duration)
+        anticipation_fixed_gaze_duration = random.randrange(
+            500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
+        pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[3]  # Update state to Decision State
 
-    
     elif current_state == state_machine[3]:  # If Stimulus state
         display_stimulus(screen, block_order[block_number-1], trial_selection)
-        draw_selection(screen,trial_selection)
+        draw_selection(screen, trial_selection)
         pygame.display.update()
-        stimulus_duration = random.randrange(1500,2500,5) #Jitter stimulus presentation (1.5s-2.5s)
-        pygame.time.wait(stimulus_duration)
+        # Jitter stimulus presentation (1.5s-2.5s)
+        stimulus_duration = random.randrange(1500, 2500, 5)
+        pygame.time.delay(stimulus_duration)
         current_state = state_machine[4]
 
     elif current_state == state_machine[4]:  # If Reward Anticipation State
@@ -164,22 +165,23 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        anticipation_fixed_gaze_duration = random.randrange(500,1500,5) #Jitter stimulus presentation (.5s-1.5s)
-        pygame.time.wait(anticipation_fixed_gaze_duration)
+        anticipation_fixed_gaze_duration = random.randrange(
+            500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
+        pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[5]  # Update state to Decision State
-
 
     elif current_state == state_machine[5]:  # If Reward state
         trial_points = generate_trial_points(
             block_order[block_number-1], trial_selection)
         points = points + trial_points
-        draw_selection(screen,trial_selection)
-        display_trial_points(screen,trial_points,trial_selection)
+        draw_selection(screen, trial_selection)
+        display_trial_points(screen, trial_points, trial_selection)
         update_displayed_points(screen, points)
         pygame.display.update()
-        points_display_duration = random.randrange(500,750,5) #Jitter stimulus presentation (.5s-.75s)
-        pygame.time.wait(points_display_duration)
+        # Jitter stimulus presentation (.5s-.75s)
+        points_display_duration = random.randrange(500, 750, 5)
+        pygame.time.delay(points_display_duration)
         current_state = state_machine[0]
 
     pygame.display.update()
