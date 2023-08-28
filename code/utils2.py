@@ -5,9 +5,11 @@ import numpy as np
 import csv
 from queue import Queue
 from datetime import datetime
+import os
 
+
+absolute_path = '/Users/raphaelb/Documents/UW/Research/gridlab/adbs_ocd/aat'
 pygame.init()
-
 # Define some constants
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -24,27 +26,33 @@ logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
 reward_conflict_prob = [[[probs[2], probs[0]], [probs[1], probs[1]], [probs[0], probs[2]]],
                         [[probs[0], probs[0]], [probs[1], probs[1]], [probs[2], probs[2]]]]
-clock = pygame.time.Clock()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 size = screen.get_size()
 # Position on the screen where the center of the 3 objects should be (middle-left, top-middle, middle-right)
 main_center_coords = np.array(
     [[size[0]/4, 2*size[1]/3], [size[0]/2, size[1]/4], [3*size[0]/4, 2*size[1]/3]])
-shape_size = size[0]/4 
+shape_size = size[0]/5
 FONT = pygame.font.SysFont("Arial", int(size[0]/40))
-#Create empty csv file to log event datq
-now = datetime.now()
-date_string = now.strftime("%d-%m-%Y_%H:%M:%S")
-with open('logger/logger_' + date_string + '.csv', 'w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow(['timestamp','subject', 'trial','state','event'])
-    file.close()
+clock = pygame.time.Clock()
 
-def generate_block(trials, blocks):
-    # Randomly generate which block is which type
-    # maybe we can generate probabilities for each aswell
-    rand_block_types = randomize_blocks(blocks)
-    print('Make this create to x number of trials')
+state_machine = ['start', 'decision', 'stimulus_anticipation',
+                 'stimulus', 'reward_anticipation', 'reward']
+current_state = state_machine[0]
+
+def create_log_file(subject):
+    # Create empty csv file to log event data
+    PATH = absolute_path+'/logger/' + subject
+    if not os.path.exists(PATH):
+        os.makedirs(PATH)
+    version = '_v1.0.0'
+    date_string = datetime.now().strftime("%d-%m-%Y_%H:%M:%S.%f")
+    logger_file_name = PATH + '/logger_' + date_string + version + '.csv'
+    with open(logger_file_name, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['timestamp', 'subject', 'block_type',
+                        'block', 'trial', 'state', 'event'])
+        file.close()
+    return logger_file_name
 
 
 def randomize_blocks(num_of_blocks):
@@ -55,6 +63,12 @@ def randomize_blocks(num_of_blocks):
     booleans[:int(k / 100 * num_of_blocks)] = True
     np.random.shuffle(booleans)  # Shuffle the array
     return booleans
+
+
+blocks = 2  # Should be even so equal number of congruent and conflict blocks
+block_order = randomize_blocks(blocks)
+block_types = ['congruent', 'conflict']
+num_of_trials = 5
 
 
 def get_hexagon_pts(x, y, radius):
@@ -125,13 +139,14 @@ def display_stimulus(screen, block, shape):
     image_type = np.random.choice(
         ['provoking/', 'neutral/'], p=[trial_prov_prob, 1-trial_prov_prob])
     which_image = str(random.randint(0, 9))
-    image = pygame.image.load(
-        "../images/" + image_type + which_image + ".jpg").convert()
+    image_path = absolute_path+"/images/" + image_type + which_image + ".jpg"
+    image = pygame.image.load(image_path).convert()
     image = pygame.transform.scale(
         image, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2))
     image_rect = image.get_rect()
     screen.blit(
         image, main_center_coords[shape, :] - np.array([image_rect.w, image_rect.h-2])/2)
+    return image_path[9::]
 
 
 def update_displayed_points(screen, points):
@@ -141,16 +156,20 @@ def update_displayed_points(screen, points):
         screen.get_rect().center) - np.array(txtsurf.get_size())/2
     screen.blit(txtsurf, points_coordinates)
 
-def format_event_log_entry(timestamp,subject,trial,state,event):
 
-    return 
-
-def write_all_events_to_csv():
-    # I think i want this to be a function that runs (once a loop?)
-    # it will open file add to the end and then close it?
-    # Maybe its with queue, throughout each step in the code add each event
-    # to the queue and at the end of the screen cycle add everything to the  file
-    for i in range(logger_queue.qsize):
-        event = logger_queue.get()
+def add_event_to_queue(subject,block_number, trial_count, event):
+    timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
+    block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
+    logger_queue.put([timestamp, subject, block_type,
+                     block_number, trial_count, current_state, event])
     return
 
+
+def write_all_events_to_csv(logger_file_name):
+    if not logger_queue.empty():
+        with open(logger_file_name, 'a') as file:
+            writer = csv.writer(file)
+            for i in range(logger_queue.qsize()):
+                writer.writerow(logger_queue.get())
+            file.close()
+    return
