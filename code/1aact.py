@@ -38,7 +38,6 @@ active = True
 while active:
     # limit to 60 frames per second
     clock.tick(60)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             active = False
@@ -78,7 +77,6 @@ while active:
         break  # Task Over
 
     if entering_subject_id:
-        print(user_text)
         # Prompt Wait to Start
         screen.fill(BLACK)
         txtsurf = FONT.render(
@@ -241,6 +239,7 @@ while active:
         current_state = state_machine[0]
         trial_count = trial_count + 1
 
+    toggle_photodiode_square(screen)
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 

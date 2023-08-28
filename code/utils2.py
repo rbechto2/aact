@@ -21,6 +21,7 @@ DKGREEN = (0, 100, 0)
 BORDER_SIZE = 8
 NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
+photodiode_length = 50 #pixels Should be 50
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
@@ -173,3 +174,9 @@ def write_all_events_to_csv(logger_file_name):
                 writer.writerow(logger_queue.get())
             file.close()
     return
+
+
+def toggle_photodiode_square(surf):
+    border_rect_coords = np.array(size) - np.array([photodiode_length, photodiode_length])
+    photodiode_rect = pygame.Rect(border_rect_coords, (photodiode_length, photodiode_length))
+    pygame.draw.rect(surf, WHITE, photodiode_rect)
