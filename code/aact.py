@@ -7,9 +7,14 @@ pygame.init()
 block_number = 1
 points = 0
 trial_count = 1
+
 started_block = False
-entering_subject_id = True
-user_text = ''
+
+subject = ''
+study = ''
+user_text_subj_id = ''
+user_text_study_id = ''
+toggle_enter_id = True
 
 # provides offset so center of object is at desired coordinates
 circle_center_offset = np.array([0, 0])
@@ -42,60 +47,106 @@ while active:
                 active = False  # Set running to False to end the while loop.
             elif not started_block and event.key == pygame.K_SPACE:
                 started_block = True
-                add_event_to_queue(subject, block_number, trial_count,0,
+                add_event_to_queue(subject, block_number, trial_count, 0,
                                    'Start Block (Pressed Spacebar)')
             elif event.key == pygame.K_a and current_state == state_machine[1]:
                 key_pressed = 'a'
-                add_event_to_queue(subject, block_number, trial_count,1,
+                add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Select option 1 (Circle)')
             elif event.key == pygame.K_s and current_state == state_machine[1]:
                 key_pressed = 's'
-                add_event_to_queue(subject, block_number, trial_count,1,
+                add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Select option 2 (Square)')
             elif event.key == pygame.K_d and current_state == state_machine[1]:
                 key_pressed = 'd'
-                add_event_to_queue(subject, block_number, trial_count,1,
+                add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Select option 3 (Hexagon)')
-            # Check for backspace
+           
             if event.key == pygame.K_RETURN:
+                print("aaaa")
+                loading_state = loading_state + 1
+                if len(subject) != 0 or len(study) != 0:
+                    print("BBBBBBB")
+                    continue
+                print("CCCCCCC")
                 entering_subject_id = False
-                subject = user_text
-                logger_file_name = create_log_file(subject)
-            elif entering_subject_id and event.key == pygame.K_BACKSPACE:
-                # get text input from 0 to -1 i.e. end.
-                user_text = user_text[:-1]
-            # Unicode standard is used for string
-            # formation
-            elif entering_subject_id:
-                user_text += event.unicode
+                subject = user_text_subj_id
+                study = user_text_study_id
+                logger_file_name = create_log_file(subject, study)
+                loading_state = loading_state + 1
+                print(loading_state)
+            elif loading_screen_state == loading_screen_state_machine[0] and event.key == pygame.K_TAB:
+                toggle_enter_id = not toggle_enter_id
+            elif loading_screen_state == loading_screen_state_machine[0] and event.key == pygame.K_BACKSPACE:
+                if toggle_enter_id:
+                    user_text_subj_id = user_text_subj_id[:-1]
+                else:
+                    user_text_study_id = user_text_study_id[:-1]
+            elif loading_screen_state == loading_screen_state_machine[0]:
+                if toggle_enter_id:
+                    user_text_subj_id += event.unicode
+                else:
+                    user_text_study_id += event.unicode
 
     if block_number > blocks:
         break  # Task Over
+    loading_screen_state = loading_screen_state_machine[loading_state]
+    print(loading_screen_state)
+    match (loading_screen_state):
+        case 'Enter IDs':
+            print(0)
+            display_id_query(user_text_subj_id,user_text_study_id,toggle_enter_id)
+            continue
+        case 'Display Task Name':
+            print(1)
+        case 'Audio-Video Alignment':
+            print(2)
+        case 'Welcome':
+            print(3)
+        case'Fixation Instructions':
+            print(4)
+        case 'Start Practice Trial':
+            print(5)
+        case 'Is Practice Trial':
+            print(6)
+        case 'Movement Warning':
+            print(7)
+        case 'Wait to Start':
+            print(8)
+            screen.fill(BLACK)
+            txtsurf = FONT.render("Press Space to Begin Block " + str(block_number), True, WHITE)
+            screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() / 2, (size[0]/2 - txtsurf.get_height()) / 2))
+            pygame.display.update()
+            continue
+    
 
-    if entering_subject_id:
-        # Prompt Wait to Start
-        screen.fill(BLACK)
-        txtsurf = FONT.render(
-            "Enter Subject ID: ", True, WHITE)
-        screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() /
-                    2, (size[0]/2 - txtsurf.get_height()) / 2))
-
-        text_surface = FONT.render(user_text, True, WHITE)
-
-        # render at position stated in arguments
-        screen.blit(
-            text_surface, (size[0]/2 - text_surface.get_width() / 2, (size[0]/2 - text_surface.get_height()) / 2 + txtsurf.get_height()))
-        pygame.display.update()
-        continue
-    elif not started_block:
-        # Prompt Wait to Start
-        screen.fill(BLACK)
-        txtsurf = FONT.render(
-            "Press Space to Begin Block " + str(block_number), True, WHITE)
-        screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() /
-                    2, (size[0]/2 - txtsurf.get_height()) / 2))
-        pygame.display.update()
-        continue
+    # if entering_subject_id:
+    #     display_id_query(user_text_subj_id,
+    #                      user_text_study_id, toggle_enter_id)
+    #     continue
+    # elif is_display_task_name:
+    #     print()
+    # elif is_audio_video_alignment:
+    #     print()
+    # elif is_welcome_screen:
+    #     print()
+    # elif is_fixation_instructions:
+    #     print()
+    # elif start_practice_trial:
+    #     print()
+    # elif is_practice_trial:
+    #     print()
+    # elif is_movement_warning:
+    #     print()
+    # elif not started_block:
+    #     # Prompt Wait to Start
+    #     screen.fill(BLACK)
+    #     txtsurf = FONT.render(
+    #         "Press Space to Begin Block " + str(block_number), True, WHITE)
+    #     screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() /
+    #                 2, (size[0]/2 - txtsurf.get_height()) / 2))
+    #     pygame.display.update()
+    #     continue
 
     # Check if End of Block
     if trial_count > num_of_trials:
@@ -118,7 +169,7 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        add_event_to_queue(subject, block_number, trial_count,2,
+        add_event_to_queue(subject, block_number, trial_count, 2,
                            'Start Trial Fix Gaze (Begin)')
         # Jitter stimulus presentation (.5s-1.5s)
         fixed_gaze_duration = random.randrange(500, 1500, 5)
@@ -129,7 +180,7 @@ while active:
         current_state = state_machine[1]  # Update state to Decision State
         is_first_cycle_in_decision_state = True
         pygame.event.clear()
-        add_event_to_queue(subject, block_number, trial_count,3,
+        add_event_to_queue(subject, block_number, trial_count, 3,
                            'Start Trial Fix Gaze (End)')
 
     elif current_state == state_machine[1]:  # If decision state
@@ -140,7 +191,7 @@ while active:
         draw_hexagon(
             screen, YELLOW, hexagon_coords[0], hexagon_coords[1], shape_size/2)
         if is_first_cycle_in_decision_state:
-            add_event_to_queue(subject, block_number, trial_count,4,
+            add_event_to_queue(subject, block_number, trial_count, 4,
                                'Display Trial Options')
             is_first_cycle_in_decision_state = False
         if key_pressed == 'a':
@@ -178,14 +229,14 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        add_event_to_queue(subject, block_number, trial_count,5,
+        add_event_to_queue(subject, block_number, trial_count, 5,
                            'Stimulius Anticipation Fix Gaze (Start)')
         anticipation_fixed_gaze_duration = random.randrange(
             500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[3]  # Update state to Decision State
-        add_event_to_queue(subject, block_number, trial_count,6,
+        add_event_to_queue(subject, block_number, trial_count, 6,
                            'Stimulius Anticipation Fix Gaze (End)')
 
     elif current_state == state_machine[3]:  # If Stimulus state
@@ -193,12 +244,14 @@ while active:
             screen, block_order[block_number-1], trial_selection)
         draw_selection(screen, trial_selection)
         pygame.display.update()
-        add_event_to_queue(subject, block_number, trial_count, 7,stimulus_image)
+        add_event_to_queue(subject, block_number,
+                           trial_count, 7, stimulus_image)
         # Jitter stimulus presentation (1.5s-2.5s)
         stimulus_duration = random.randrange(1500, 2500, 5)
         pygame.time.delay(stimulus_duration)
         current_state = state_machine[4]
-        add_event_to_queue(subject, block_number, trial_count, 8,'End Stimulus')
+        add_event_to_queue(subject, block_number,
+                           trial_count, 8, 'End Stimulus')
 
     elif current_state == state_machine[4]:  # If Reward Anticipation State
         screen.fill(BLACK)
@@ -209,14 +262,14 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        add_event_to_queue(subject, block_number, trial_count,9,
+        add_event_to_queue(subject, block_number, trial_count, 9,
                            'Reward Anticipation Fix Gaze (Start)')
         anticipation_fixed_gaze_duration = random.randrange(
             500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[5]  # Update state to Decision State
-        add_event_to_queue(subject, block_number, trial_count,10,
+        add_event_to_queue(subject, block_number, trial_count, 10,
                            'Reward Anticipation Fix Gaze (End)')
 
     elif current_state == state_machine[5]:  # If Reward state
@@ -227,7 +280,7 @@ while active:
         display_trial_points(screen, trial_points, trial_selection)
         update_displayed_points(screen, points)
         pygame.display.update()
-        add_event_to_queue(subject, block_number, trial_count,11,
+        add_event_to_queue(subject, block_number, trial_count, 11,
                            str(trial_points) + " points")
         # Jitter stimulus presentation (.5s-.75s)
         points_display_duration = random.randrange(500, 750, 5)

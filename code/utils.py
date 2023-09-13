@@ -36,14 +36,19 @@ shape_size = size[0]/5
 FONT = pygame.font.SysFont("Arial", int(size[0]/40))
 clock = pygame.time.Clock()
 
+loading_screen_state_machine = ['Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome', 'Fixation Instructions', 'Start Practice Trial','Is Practice Trial','Movement Warning','Wait to Start']
+loading_state = 0
+loading_screen_state = loading_screen_state_machine[loading_state]
+
+
 state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
 current_state = state_machine[0]
 
 
-def create_log_file(subject):
+def create_log_file(subject,study):
     # Create empty csv file to log event data
-    PATH = absolute_path+'/logger/' + subject
+    PATH = absolute_path + '/logger/' + study + '/' + subject
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     version = '_v1.0.0'
@@ -183,3 +188,37 @@ def toggle_photodiode_square(surf):
     photodiode_rect = pygame.Rect(
         border_rect_coords, (photodiode_length, photodiode_length))
     pygame.draw.rect(surf, WHITE, photodiode_rect)
+
+def display_text_to_continue():
+    my_font = pygame.font.SysFont("Arial", int(size[0]/75))
+    text_surf = my_font.render("Press Enter to Continue", True, WHITE)
+    screen.blit(text_surf, (size[0]/2 - text_surf.get_width()/2, size[1] - text_surf.get_height() - 50))
+
+def display_id_query(user_text_subj_id,user_text_study_id,toggle):
+    # Prompt Wait to Start
+    screen.fill(BLACK)
+    txtsurf_subj = FONT.render("Subject ID: ", True, WHITE)
+    txtsurf_study = FONT.render("Study ID: ", True, WHITE)
+    subj_text_surface = FONT.render(user_text_subj_id, True, WHITE)
+    study_text_surface = FONT.render(user_text_study_id, True, WHITE)
+
+    if toggle:
+        pygame.draw.line(txtsurf_subj, WHITE,txtsurf_subj.get_rect().bottomleft,txtsurf_subj.get_rect().bottomright,5)
+        pygame.draw.line(subj_text_surface, WHITE,subj_text_surface.get_rect().bottomleft,subj_text_surface.get_rect().bottomright,5)
+    else:
+        pygame.draw.line(txtsurf_study, WHITE,txtsurf_study.get_rect().bottomleft,txtsurf_study.get_rect().bottomright,5)
+        pygame.draw.line(study_text_surface, WHITE,study_text_surface.get_rect().bottomleft,study_text_surface.get_rect().bottomright,5)
+
+    #Display "Subject ID"
+    screen.blit(txtsurf_subj, (size[0]/2 - txtsurf_subj.get_width()/2, (size[0]/2 - txtsurf_subj.get_height()) / 2))
+    #Display "Study ID"
+    screen.blit(txtsurf_study, (size[0]/2 - txtsurf_subj.get_width()/2, (size[0]/2 - txtsurf_subj.get_height()) / 2+txtsurf_subj.get_height()+10))
+
+    # render at position stated in arguments
+    screen.blit(subj_text_surface, ((size[0]+txtsurf_subj.get_width())/2, (size[0]/2 - subj_text_surface.get_height()) / 2 ))
+    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-25, (size[0]/2 - study_text_surface.get_height()) / 2 + txtsurf_subj.get_height()+10))
+    
+    display_text_to_continue()
+    
+    pygame.display.update()
+
