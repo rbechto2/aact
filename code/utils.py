@@ -21,7 +21,7 @@ DKGREEN = (0, 100, 0)
 BORDER_SIZE = 8
 NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
-photodiode_length = 50 #pixels Should be 50
+photodiode_length = 50  # pixels Should be 50
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
@@ -40,18 +40,19 @@ state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
 current_state = state_machine[0]
 
+
 def create_log_file(subject):
     # Create empty csv file to log event data
     PATH = absolute_path+'/logger/' + subject
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     version = '_v1.0.0'
-    date_string = datetime.now().strftime("%d-%m-%Y_%H:%M:%S.%f")
+    date_string = datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")
     logger_file_name = PATH + '/logger_' + date_string + version + '.csv'
     with open(logger_file_name, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['timestamp', 'subject', 'block_type',
-                        'block', 'trial', 'state', 'event'])
+                        'block', 'trial', 'state', 'event','extra_comments'])
         file.close()
     return logger_file_name
 
@@ -158,11 +159,11 @@ def update_displayed_points(screen, points):
     screen.blit(txtsurf, points_coordinates)
 
 
-def add_event_to_queue(subject,block_number, trial_count, event):
+def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
-                     block_number, trial_count, current_state, event])
+                     block_number, trial_count, current_state, event, extra_comments])
     return
 
 
@@ -177,6 +178,8 @@ def write_all_events_to_csv(logger_file_name):
 
 
 def toggle_photodiode_square(surf):
-    border_rect_coords = np.array(size) - np.array([photodiode_length, photodiode_length])
-    photodiode_rect = pygame.Rect(border_rect_coords, (photodiode_length, photodiode_length))
+    border_rect_coords = np.array(
+        size) - np.array([photodiode_length, photodiode_length])
+    photodiode_rect = pygame.Rect(
+        border_rect_coords, (photodiode_length, photodiode_length))
     pygame.draw.rect(surf, WHITE, photodiode_rect)

@@ -1,10 +1,6 @@
 import pygame
 import numpy as np
-from utils2 import *
-
-# TODO Add "neg images" count?
-# TODO Add photodiode square
-# TODO Add logging
+from utils import *
 
 pygame.init()
 
@@ -46,19 +42,19 @@ while active:
                 active = False  # Set running to False to end the while loop.
             elif not started_block and event.key == pygame.K_SPACE:
                 started_block = True
-                add_event_to_queue(subject,block_number, trial_count,
+                add_event_to_queue(subject, block_number, trial_count,0,
                                    'Start Block (Pressed Spacebar)')
             elif event.key == pygame.K_a and current_state == state_machine[1]:
                 key_pressed = 'a'
-                add_event_to_queue(subject,block_number, trial_count,
+                add_event_to_queue(subject, block_number, trial_count,1,
                                    'Select option 1 (Circle)')
             elif event.key == pygame.K_s and current_state == state_machine[1]:
                 key_pressed = 's'
-                add_event_to_queue(subject,block_number, trial_count,
+                add_event_to_queue(subject, block_number, trial_count,1,
                                    'Select option 2 (Square)')
             elif event.key == pygame.K_d and current_state == state_machine[1]:
                 key_pressed = 'd'
-                add_event_to_queue(subject,block_number, trial_count,
+                add_event_to_queue(subject, block_number, trial_count,1,
                                    'Select option 3 (Hexagon)')
             # Check for backspace
             if event.key == pygame.K_RETURN:
@@ -122,7 +118,7 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        add_event_to_queue(subject,block_number, trial_count,
+        add_event_to_queue(subject, block_number, trial_count,2,
                            'Start Trial Fix Gaze (Begin)')
         # Jitter stimulus presentation (.5s-1.5s)
         fixed_gaze_duration = random.randrange(500, 1500, 5)
@@ -133,7 +129,7 @@ while active:
         current_state = state_machine[1]  # Update state to Decision State
         is_first_cycle_in_decision_state = True
         pygame.event.clear()
-        add_event_to_queue(subject,block_number, trial_count,
+        add_event_to_queue(subject, block_number, trial_count,3,
                            'Start Trial Fix Gaze (End)')
 
     elif current_state == state_machine[1]:  # If decision state
@@ -144,7 +140,7 @@ while active:
         draw_hexagon(
             screen, YELLOW, hexagon_coords[0], hexagon_coords[1], shape_size/2)
         if is_first_cycle_in_decision_state:
-            add_event_to_queue(subject,block_number, trial_count,
+            add_event_to_queue(subject, block_number, trial_count,4,
                                'Display Trial Options')
             is_first_cycle_in_decision_state = False
         if key_pressed == 'a':
@@ -182,14 +178,14 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        add_event_to_queue(subject,block_number, trial_count,
+        add_event_to_queue(subject, block_number, trial_count,5,
                            'Stimulius Anticipation Fix Gaze (Start)')
         anticipation_fixed_gaze_duration = random.randrange(
             500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[3]  # Update state to Decision State
-        add_event_to_queue(subject,block_number, trial_count,
+        add_event_to_queue(subject, block_number, trial_count,6,
                            'Stimulius Anticipation Fix Gaze (End)')
 
     elif current_state == state_machine[3]:  # If Stimulus state
@@ -197,12 +193,12 @@ while active:
             screen, block_order[block_number-1], trial_selection)
         draw_selection(screen, trial_selection)
         pygame.display.update()
-        add_event_to_queue(subject,block_number, trial_count, stimulus_image)
+        add_event_to_queue(subject, block_number, trial_count, 7,stimulus_image)
         # Jitter stimulus presentation (1.5s-2.5s)
         stimulus_duration = random.randrange(1500, 2500, 5)
         pygame.time.delay(stimulus_duration)
         current_state = state_machine[4]
-        add_event_to_queue(subject,block_number, trial_count, 'End Stimulus')
+        add_event_to_queue(subject, block_number, trial_count, 8,'End Stimulus')
 
     elif current_state == state_machine[4]:  # If Reward Anticipation State
         screen.fill(BLACK)
@@ -213,14 +209,14 @@ while active:
         screen.blit(gaze_target, np.array(screen.get_rect().center) -
                     np.array([gaze_rect.w, gaze_rect.h])/2)
         pygame.display.update()
-        add_event_to_queue(subject,block_number, trial_count,
+        add_event_to_queue(subject, block_number, trial_count,9,
                            'Reward Anticipation Fix Gaze (Start)')
         anticipation_fixed_gaze_duration = random.randrange(
             500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[5]  # Update state to Decision State
-        add_event_to_queue(subject,block_number, trial_count,
+        add_event_to_queue(subject, block_number, trial_count,10,
                            'Reward Anticipation Fix Gaze (End)')
 
     elif current_state == state_machine[5]:  # If Reward state
@@ -231,7 +227,7 @@ while active:
         display_trial_points(screen, trial_points, trial_selection)
         update_displayed_points(screen, points)
         pygame.display.update()
-        add_event_to_queue(subject,block_number, trial_count,
+        add_event_to_queue(subject, block_number, trial_count,11,
                            str(trial_points) + " points")
         # Jitter stimulus presentation (.5s-.75s)
         points_display_duration = random.randrange(500, 750, 5)
