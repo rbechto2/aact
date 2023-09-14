@@ -5,7 +5,10 @@ import numpy as np
 import csv
 from queue import Queue
 from datetime import datetime
+import serial
 import os
+from enum import IntEnum
+
 
 
 absolute_path = '/Users/raphaelb/Documents/UW/Research/gridlab/adbs_ocd/aat'
@@ -18,10 +21,13 @@ GREEN = (34, 139, 34)
 RED = (200, 50, 50)
 BLUE = (50, 50, 255)
 DKGREEN = (0, 100, 0)
+GRAY = (88,84,84)
 BORDER_SIZE = 8
 NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
-photodiode_length = 50  # pixels Should be 50
+photodiode_length = 65  # pixels Should be 50
+photodiode_bool = True
+pulse_width = .1 #for signal sent to brain trigger box?
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
@@ -36,7 +42,8 @@ shape_size = size[0]/5
 FONT = pygame.font.SysFont("Arial", int(size[0]/40))
 clock = pygame.time.Clock()
 
-loading_screen_state_machine = ['Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome', 'Fixation Instructions', 'Start Practice Trial','Is Practice Trial','Movement Warning','Wait to Start']
+loading_screen_state_machine = ['Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome',
+                                'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
 
@@ -45,8 +52,18 @@ state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
 current_state = state_machine[0]
 
+port = serial.Serial("/dev/cu.usbmodem141213201")
+port.write([0x00])
 
-def create_log_file(subject,study):
+pygame.mixer.init()
+pygame.mixer.music.load(absolute_path+'/audio/beep.mp3')
+
+class Events(IntEnum):
+    START_Task = 1
+    TWO = 2
+    THREE = 3
+
+def create_log_file(subject, study):
     # Create empty csv file to log event data
     PATH = absolute_path + '/logger/' + study + '/' + subject
     if not os.path.exists(PATH):
@@ -57,7 +74,7 @@ def create_log_file(subject,study):
     with open(logger_file_name, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['timestamp', 'subject', 'block_type',
-                        'block', 'trial', 'state', 'event','extra_comments'])
+                        'block', 'trial', 'state', 'event', 'extra_comments'])
         file.close()
     return logger_file_name
 
@@ -169,8 +186,18 @@ def add_event_to_queue(subject, block_number, trial_count, event, extra_comments
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
                      block_number, trial_count, current_state, event, extra_comments])
+    return 
+
+def toggle_photodiode_circle(photodiode_bool):
+    border_rect_coords = np.array(
+        size) - np.array([photodiode_length, photodiode_length])/2
+    pygame.draw.circle(screen, WHITE,border_rect_coords,photodiode_length/2-5)
     return
 
+def display_photodiode_boarder():
+    border_rect_coords = np.array(size) - np.array([photodiode_length, photodiode_length])
+    photodiode_rect = pygame.Rect(border_rect_coords, (photodiode_length, photodiode_length))
+    pygame.draw.rect(screen, GRAY, photodiode_rect,5)
 
 def write_all_events_to_csv(logger_file_name):
     if not logger_queue.empty():
@@ -181,21 +208,14 @@ def write_all_events_to_csv(logger_file_name):
             file.close()
     return
 
-
-def toggle_photodiode_square(surf):
-    border_rect_coords = np.array(
-        size) - np.array([photodiode_length, photodiode_length])
-    photodiode_rect = pygame.Rect(
-        border_rect_coords, (photodiode_length, photodiode_length))
-    pygame.draw.rect(surf, WHITE, photodiode_rect)
-
 def display_text_to_continue():
     my_font = pygame.font.SysFont("Arial", int(size[0]/75))
-    text_surf = my_font.render("Press Enter to Continue", True, WHITE)
-    screen.blit(text_surf, (size[0]/2 - text_surf.get_width()/2, size[1] - text_surf.get_height() - 50))
+    text_surf = my_font.render("Press Spacebar to Continue", True, WHITE)
+    screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
+                2, 3*size[1]/4 - text_surf.get_height() - 50))
 
-def display_id_query(user_text_subj_id,user_text_study_id,toggle):
-    # Prompt Wait to Start
+
+def display_id_query(user_text_subj_id, user_text_study_id, toggle):
     screen.fill(BLACK)
     txtsurf_subj = FONT.render("Subject ID: ", True, WHITE)
     txtsurf_study = FONT.render("Study ID: ", True, WHITE)
@@ -203,22 +223,67 @@ def display_id_query(user_text_subj_id,user_text_study_id,toggle):
     study_text_surface = FONT.render(user_text_study_id, True, WHITE)
 
     if toggle:
-        pygame.draw.line(txtsurf_subj, WHITE,txtsurf_subj.get_rect().bottomleft,txtsurf_subj.get_rect().bottomright,5)
-        pygame.draw.line(subj_text_surface, WHITE,subj_text_surface.get_rect().bottomleft,subj_text_surface.get_rect().bottomright,5)
+        pygame.draw.line(txtsurf_subj, WHITE, txtsurf_subj.get_rect(
+        ).bottomleft, txtsurf_subj.get_rect().bottomright, 5)
+        pygame.draw.line(subj_text_surface, WHITE, subj_text_surface.get_rect(
+        ).bottomleft, subj_text_surface.get_rect().bottomright, 5)
     else:
-        pygame.draw.line(txtsurf_study, WHITE,txtsurf_study.get_rect().bottomleft,txtsurf_study.get_rect().bottomright,5)
-        pygame.draw.line(study_text_surface, WHITE,study_text_surface.get_rect().bottomleft,study_text_surface.get_rect().bottomright,5)
+        pygame.draw.line(txtsurf_study, WHITE, txtsurf_study.get_rect(
+        ).bottomleft, txtsurf_study.get_rect().bottomright, 5)
+        pygame.draw.line(study_text_surface, WHITE, study_text_surface.get_rect(
+        ).bottomleft, study_text_surface.get_rect().bottomright, 5)
 
-    #Display "Subject ID"
-    screen.blit(txtsurf_subj, (size[0]/2 - txtsurf_subj.get_width()/2, (size[0]/2 - txtsurf_subj.get_height()) / 2))
-    #Display "Study ID"
-    screen.blit(txtsurf_study, (size[0]/2 - txtsurf_subj.get_width()/2, (size[0]/2 - txtsurf_subj.get_height()) / 2+txtsurf_subj.get_height()+10))
+    # Display "Subject ID"
+    screen.blit(txtsurf_subj, (size[0]/2 - txtsurf_subj.get_width() /
+                2, size[1]/2 - txtsurf_subj.get_height()/2))
+    # Display "Study ID"
+    screen.blit(txtsurf_study, (size[0]/2 - txtsurf_subj.get_width()/2,
+                size[1]/2 - txtsurf_subj.get_height()/2+txtsurf_subj.get_height()+10))
 
     # render at position stated in arguments
-    screen.blit(subj_text_surface, ((size[0]+txtsurf_subj.get_width())/2, (size[0]/2 - subj_text_surface.get_height()) / 2 ))
-    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-25, (size[0]/2 - study_text_surface.get_height()) / 2 + txtsurf_subj.get_height()+10))
-    
+    screen.blit(subj_text_surface, ((
+        size[0]+txtsurf_subj.get_width())/2, size[1]/2 - subj_text_surface.get_height()/2))
+    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-25,
+                size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()+10))
+
     display_text_to_continue()
-    
+
     pygame.display.update()
+
+
+def display_task_name():
+    screen.fill(BLACK)
+    task_name = FONT.render("Approach Avoidance Conflict Task", True, WHITE)
+    screen.blit(task_name, (size[0]/2 - task_name.get_width() /
+                2, size[1]/2 - task_name.get_height()/2))
+    display_text_to_continue()
+    pygame.display.update()
+
+
+def display_audio_video_alignment():
+    screen.fill(BLACK)
+
+    task_name = FONT.render("Set Volume to 50/100.", True, WHITE)
+    screen.blit(task_name, (size[0]/2 - task_name.get_width() /
+                2, size[1]/2 - task_name.get_height()/2))
+    display_text_to_continue()
+    pygame.display.update()
+
+
+def display_welcome():
+    screen.fill(BLACK)
+    my_font = pygame.font.SysFont("Arial", int(size[0]/75))
+    task_txt = FONT.render("Welcome!", True, WHITE)
+    prompt_txt = my_font.render(
+        "During the task, you will be asked to select between three shapes a circle, square , and hexgon." \
+        + "After each decision an image will be presented and points will be given. There will be two block ", True, WHITE)
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
+                2, size[1]/3 - task_txt.get_height()/2))
+    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2,
+                size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
+
+    display_text_to_continue()
+    pygame.display.update()
+
+
 
