@@ -58,11 +58,11 @@ while active:
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
            
-            if loading_state <= 8 and event.key == pygame.K_RIGHT:    
+            if loading_state <= final_load_state and event.key == pygame.K_RIGHT:    
                 if has_entered_id:
                     if loading_state == 2:
                         pygame.mixer.music.play()
-                    elif loading_state == 8:
+                    elif loading_state == final_load_state:
                         loading_state = loading_state + 1
                         loading_screen_state = ''
                         add_event_to_queue(subject, block_number, trial_count, 0,'Start Block (Pressed Spacebar)')
@@ -93,7 +93,7 @@ while active:
 
     if block_number > blocks:
         break  # Task Over
-    if loading_state <= 8:
+    if loading_state <= final_load_state:
         match (loading_screen_state):
             case 'Enter IDs':
                 display_id_query(user_text_subj_id,user_text_study_id,toggle_enter_id)
@@ -113,7 +113,7 @@ while active:
                 continue
             case 'Wait to Start':
                 screen.fill(BLACK)
-                txtsurf = FONT.render("Press Enter to Begin Block " + str(block_number), True, WHITE)
+                txtsurf = FONT.render("Press Right Arrow to Begin Block " + str(block_number), True, WHITE)
                 screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() / 2, (size[0]/2 - txtsurf.get_height()) / 2))
                 pygame.display.update()
                 #TODO add countdown
@@ -249,5 +249,5 @@ while active:
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 
-#port.close()
+port.close()
 pygame.quit()

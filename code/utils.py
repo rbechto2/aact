@@ -6,6 +6,7 @@ import csv
 from queue import Queue
 from datetime import datetime
 import serial
+import serial.tools.list_ports
 import os
 from enum import IntEnum
 
@@ -46,15 +47,23 @@ loading_screen_state_machine = ['Enter IDs', 'Display Task Name', 'Audio-Video A
                                 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
-
+final_load_state = 4
 
 state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
 current_state = state_machine[0]
 
-# port = serial.Serial("/dev/cu.usbmodem141213201")
-# port.write([0x15]) #Approach Avoidance conflict task start task (output to brainvision) (0x15 = 21)
-# port.write([0x00]) #turn off output
+def find_brain_vision_tiggerbox_port():
+    all_ports = serial.tools.list_ports.comports()
+    for port, desc, hwid in sorted(all_ports):
+            print("Port: ", port)
+            if "Trigger" in port.lower() or "/dev/cu.usbmodem141213201" in port:
+                return port
+            
+           
+port = serial.Serial(find_brain_vision_tiggerbox_port())
+port.write([0x15]) #Approach Avoidance conflict task start task (output to brainvision) (0x15 = 21)
+port.write([0x00]) #turn off output
 
 pygame.mixer.init()
 pygame.mixer.music.load(absolute_path+'/audio/beep.mp3')
@@ -189,8 +198,8 @@ def update_displayed_points(screen, points):
 
 
 def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
-    # port.write([hex(event)]) #Send event code to brain vision trigger box
-    # port.write([0x00]) #turn off output
+    port.write([event]) #Send event code to brain vision trigger box
+    port.write([0x00]) #turn off output
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
@@ -219,7 +228,7 @@ def write_all_events_to_csv(logger_file_name):
 
 def display_text_to_continue():
     my_font = pygame.font.SysFont("Arial", int(size[0]/75))
-    text_surf = my_font.render("Press Enter to Continue", True, WHITE)
+    text_surf = my_font.render("Previous Page (Left Arrow)                      Next Page (Right Arrow)", True, WHITE)
     screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
                 2, 3*size[1]/4 - text_surf.get_height() - 50))
 
@@ -244,16 +253,16 @@ def display_id_query(user_text_subj_id, user_text_study_id, toggle):
 
     # Display "Subject ID"
     screen.blit(txtsurf_subj, (size[0]/2 - txtsurf_subj.get_width() /
-                2, size[1]/2 - txtsurf_subj.get_height()/2))
+                2-10, size[1]/2 - txtsurf_subj.get_height()/2))
     # Display "Study ID"
-    screen.blit(txtsurf_study, (size[0]/2 - txtsurf_subj.get_width()/2,
-                size[1]/2 - txtsurf_subj.get_height()/2+txtsurf_subj.get_height()+10))
+    screen.blit(txtsurf_study, (size[0]/2 - txtsurf_subj.get_width()/2-10,
+                size[1]/2 - txtsurf_subj.get_height()/2+txtsurf_subj.get_height()))
 
     # render at position stated in arguments
     screen.blit(subj_text_surface, ((
-        size[0]+txtsurf_subj.get_width())/2, size[1]/2 - subj_text_surface.get_height()/2))
-    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-25,
-                size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()+10))
+        size[0]+txtsurf_subj.get_width())/2-10, size[1]/2 - subj_text_surface.get_height()/2))
+    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2,
+                size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()))
 
     display_text_to_continue()
 
@@ -281,16 +290,30 @@ def display_audio_video_alignment():
 
 def display_welcome():
     screen.fill(BLACK)
-    my_font = pygame.font.SysFont("Arial", int(size[0]/75))
+    my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     task_txt = FONT.render("Welcome!", True, WHITE)
-    prompt_txt = my_font.render(
-        "During the task, you will be asked to select between three shapes a circle, square , or hexagon using either the 1, 2, or 3 key." \
-        + "After each decision an image will be presented and points will be given. There will be two block ", True, WHITE)
+    prompt_txt1 = my_font.render("During the task, you will be asked to select between three shapes using the 1, 2, or 3 button keys, after which an image will appear and points will be awarded. ", True, WHITE)
+    prompt_txt2 = my_font.render("The goal of the task is to maximize your score. Each shape will have a different probability of displaying a neutral or anxiety-provoking image and different", True, WHITE)
+    prompt_txt3 = my_font.render("probabilities for either gaining or losing points for that trial. These probabilities will stay consistent within a single block. There will be", True, WHITE)
+    prompt_txt4 = my_font.render("two types of blocks: congruent and conflict blocks. Decisions during congruent trials will award more points for displaying neutral images", True, WHITE)
+    prompt_txt5 = my_font.render("or take points away for displaying provoking images, while conflict trials will awards more points for displaying provoking images", True, WHITE)
+    prompt_txt6 = my_font.render(" and take points away for displaying neutral images.", True, WHITE)
+
+
     screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
                 2, size[1]/3 - task_txt.get_height()/2))
-    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2,
-                size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
-
+    screen.blit(prompt_txt1, (size[0]/2 - prompt_txt1.get_width()/2,
+                size[1]/3 - prompt_txt1.get_height()/2+task_txt.get_height()))
+    screen.blit(prompt_txt2, (size[0]/2 - prompt_txt1.get_width()/2,
+                size[1]/3 - prompt_txt1.get_height()/2+prompt_txt1.get_height()+task_txt.get_height()))
+    screen.blit(prompt_txt3, (size[0]/2 - prompt_txt3.get_width()/2,
+                size[1]/3 - prompt_txt3.get_height()/2+prompt_txt2.get_height()+prompt_txt1.get_height()+task_txt.get_height()))
+    screen.blit(prompt_txt4, (size[0]/2 - prompt_txt4.get_width()/2,
+                size[1]/3 - prompt_txt4.get_height()/2+prompt_txt1.get_height()+prompt_txt2.get_height()+prompt_txt3.get_height()+task_txt.get_height()))
+    screen.blit(prompt_txt5, (size[0]/2 - prompt_txt5.get_width()/2,
+                size[1]/3 - prompt_txt5.get_height()/2+prompt_txt1.get_height()+prompt_txt2.get_height()+prompt_txt3.get_height()+prompt_txt4.get_height()+task_txt.get_height()))
+    screen.blit(prompt_txt6, (size[0]/2 - prompt_txt6.get_width()/2,
+                size[1]/3 - prompt_txt6.get_height()/2+prompt_txt1.get_height()+prompt_txt2.get_height()+prompt_txt3.get_height()+prompt_txt4.get_height()+prompt_txt5.get_height()+task_txt.get_height()))
     display_text_to_continue()
     pygame.display.update()
 
