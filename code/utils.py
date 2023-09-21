@@ -52,8 +52,9 @@ state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
 current_state = state_machine[0]
 
-port = serial.Serial("/dev/cu.usbmodem141213201")
-port.write([0x00])
+# port = serial.Serial("/dev/cu.usbmodem141213201")
+# port.write([0x15]) #Approach Avoidance conflict task start task (output to brainvision) (0x15 = 21)
+# port.write([0x00]) #turn off output
 
 pygame.mixer.init()
 pygame.mixer.music.load(absolute_path+'/audio/beep.mp3')
@@ -133,6 +134,12 @@ def draw_selection(surf, selection):
     border_rect = pygame.Rect(border_rect_coords, (side_len, side_len))
     pygame.draw.rect(surf, RED, border_rect, BORDER_SIZE)
 
+def display_fixation():
+    gaze_target = pygame.image.load(
+    absolute_path+"/images/plus_symbol.png").convert()
+    gaze_target = pygame.transform.scale(gaze_target, (25, 25))
+    gaze_rect = gaze_target.get_rect()
+    screen.blit(gaze_target, np.array(screen.get_rect().center) - np.array([gaze_rect.w, gaze_rect.h])/2)
 
 def generate_trial_points(block_type, shape):
     trial_reward_prob = reward_conflict_prob[block_type][shape][0]
@@ -182,6 +189,8 @@ def update_displayed_points(screen, points):
 
 
 def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
+    # port.write([hex(event)]) #Send event code to brain vision trigger box
+    # port.write([0x00]) #turn off output
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
@@ -210,7 +219,7 @@ def write_all_events_to_csv(logger_file_name):
 
 def display_text_to_continue():
     my_font = pygame.font.SysFont("Arial", int(size[0]/75))
-    text_surf = my_font.render("Press Spacebar to Continue", True, WHITE)
+    text_surf = my_font.render("Press Enter to Continue", True, WHITE)
     screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
                 2, 3*size[1]/4 - text_surf.get_height() - 50))
 
@@ -275,7 +284,7 @@ def display_welcome():
     my_font = pygame.font.SysFont("Arial", int(size[0]/75))
     task_txt = FONT.render("Welcome!", True, WHITE)
     prompt_txt = my_font.render(
-        "During the task, you will be asked to select between three shapes a circle, square , and hexgon." \
+        "During the task, you will be asked to select between three shapes a circle, square , or hexagon using either the 1, 2, or 3 key." \
         + "After each decision an image will be presented and points will be given. There will be two block ", True, WHITE)
     screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
                 2, size[1]/3 - task_txt.get_height()/2))
@@ -285,5 +294,25 @@ def display_welcome():
     display_text_to_continue()
     pygame.display.update()
 
+def display_fixation_instructions():
+    screen.fill(BLACK)
+    my_font = pygame.font.SysFont("Arial", int(size[0]/50))
+    task_txt = my_font.render("Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
+    prompt_txt = my_font.render("Try to keep your eyes focused on the fixation cross during the task.", True, WHITE)
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() / 2, size[1]/3 - task_txt.get_height()/2))
+    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2, size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
+    display_fixation()
+    display_text_to_continue()
+    pygame.display.update()
 
+def display_fixation_instructions():
+    screen.fill(BLACK)
+    my_font = pygame.font.SysFont("Arial", int(size[0]/50))
+    task_txt = my_font.render("Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
+    prompt_txt = my_font.render("Try to keep your eyes focused on the fixation cross during the task.", True, WHITE)
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() / 2, size[1]/3 - task_txt.get_height()/2))
+    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2, size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
+    display_fixation()
+    display_text_to_continue()
+    pygame.display.update()
 
