@@ -45,20 +45,20 @@ while active:
             if event.key == pygame.K_ESCAPE:
                 active = False  # Set running to False to end the while loop.
 
-            elif event.key == pygame.K_a and current_state == state_machine[1]:
-                key_pressed = 'a'
+            elif event.key == pygame.K_1 and current_state == state_machine[1]:
+                key_pressed = '1'
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Circle')
-            elif event.key == pygame.K_s and current_state == state_machine[1]:
-                key_pressed = 's'
+            elif event.key == pygame.K_2 and current_state == state_machine[1]:
+                key_pressed = '2'
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Square')
-            elif event.key == pygame.K_d and current_state == state_machine[1]:
-                key_pressed = 'd'
+            elif event.key == pygame.K_3 and current_state == state_machine[1]:
+                key_pressed = '3'
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
            
-            if loading_state <= 8 and event.key == pygame.K_RETURN:    
+            if loading_state <= 8 and event.key == pygame.K_RIGHT:    
                 if has_entered_id:
                     if loading_state == 2:
                         pygame.mixer.music.play()
@@ -104,9 +104,8 @@ while active:
             case 'Welcome':
                 display_welcome()
             case'Fixation Instructions':
-                continue
+                display_fixation_instructions()
             case 'Start Practice Trial':
-                print(5)
                 continue
             case 'Is Practice Trial':
                 continue
@@ -133,14 +132,7 @@ while active:
         trial_selection = None
         screen.fill(BLACK)
         display_photodiode_boarder()
-        # Display score on top left corner
-        # update_displayed_points(screen, points)
-        gaze_target = pygame.image.load(
-            absolute_path+"/images/plus_symbol.png").convert()
-        gaze_target = pygame.transform.scale(gaze_target, (25, 25))
-        gaze_rect = gaze_target.get_rect()
-        screen.blit(gaze_target, np.array(screen.get_rect().center) -
-                    np.array([gaze_rect.w, gaze_rect.h])/2)
+        display_fixation()
         add_event_to_queue(subject, block_number, trial_count, 2,
                            'Start Trial Fix Gaze (Begin)')
         pygame.display.update()
@@ -168,7 +160,7 @@ while active:
             add_event_to_queue(subject, block_number, trial_count, 4,
                                'Display Trial Options')
             is_first_cycle_in_decision_state = False
-        if key_pressed == 'a':
+        if key_pressed == '1':
             draw_circle(screen, GREEN, circle_coords,
                         shape_size/2, True)
             current_state = state_machine[2]
@@ -176,7 +168,7 @@ while active:
             pygame.display.update()
             pygame.time.delay(500)
 
-        elif key_pressed == 's':
+        elif key_pressed == '2':
             draw_square(screen, BLUE, pygame.Rect(
                 square_coords, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2)), True)
             current_state = state_machine[2]
@@ -184,7 +176,7 @@ while active:
             pygame.display.update()
             pygame.time.delay(500)
 
-        elif key_pressed == 'd':
+        elif key_pressed == '3':
             draw_hexagon(
                 screen, YELLOW, hexagon_coords[0], hexagon_coords[1], shape_size/2, True)
             current_state = state_machine[2]
@@ -197,12 +189,7 @@ while active:
     elif current_state == state_machine[2]:  # If Stimulus Anticipation State
         screen.fill(BLACK)
         display_photodiode_boarder()
-        gaze_target = pygame.image.load(
-            absolute_path+"/images/plus_symbol.png").convert()
-        gaze_target = pygame.transform.scale(gaze_target, (25, 25))
-        gaze_rect = gaze_target.get_rect()
-        screen.blit(gaze_target, np.array(screen.get_rect().center) -
-                    np.array([gaze_rect.w, gaze_rect.h])/2)
+        display_fixation()
         add_event_to_queue(subject, block_number, trial_count, 5,
                            'Stimulius Anticipation Fix Gaze (Start)')
         pygame.display.update()
@@ -230,12 +217,7 @@ while active:
     elif current_state == state_machine[4]:  # If Reward Anticipation State
         screen.fill(BLACK)
         display_photodiode_boarder()
-        gaze_target = pygame.image.load(
-            absolute_path+"/images/plus_symbol.png").convert()
-        gaze_target = pygame.transform.scale(gaze_target, (25, 25))
-        gaze_rect = gaze_target.get_rect()
-        screen.blit(gaze_target, np.array(screen.get_rect().center) -
-                    np.array([gaze_rect.w, gaze_rect.h])/2)
+        display_fixation()
         add_event_to_queue(subject, block_number, trial_count, 9,
                            'Reward Anticipation Fix Gaze (Start)')
         pygame.display.update()
@@ -257,7 +239,6 @@ while active:
         pygame.display.update()
         add_event_to_queue(subject, block_number, trial_count, 11,
                            str(trial_points) + " points")
-        # Jitter stimulus presentation (.5s-.75s)
         points_display_duration = random.randrange(500, 750, 5)
         pygame.time.delay(points_display_duration)
         current_state = state_machine[0]
@@ -268,5 +249,5 @@ while active:
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 
-
+#port.close()
 pygame.quit()
