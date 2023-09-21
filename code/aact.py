@@ -58,7 +58,7 @@ while active:
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
            
-            if loading_state <= final_load_state and event.key == pygame.K_RIGHT:    
+            if loading_state <= final_load_state and (event.key == pygame.K_RETURN):# in[pygame.K_LEFT,pygame.K_RETURN, pygame.K_RIGHT]):    
                 if has_entered_id:
                     if loading_state == 2:
                         pygame.mixer.music.play()
@@ -78,6 +78,7 @@ while active:
                     has_entered_id = True
                     loading_state = loading_state + 1
                     loading_screen_state = loading_screen_state_machine[loading_state]
+                    image_file_names = get_image_file_names(subject)
             elif loading_screen_state == loading_screen_state_machine[0] and event.key == pygame.K_TAB:
                 toggle_enter_id = not toggle_enter_id
             elif loading_screen_state == loading_screen_state_machine[0] and event.key == pygame.K_BACKSPACE:
@@ -125,6 +126,8 @@ while active:
         trial_count = 0
         block_number = block_number + 1
         current_state = state_machine[0]
+        loading_state = 4
+        loading_screen_state = loading_screen_state_machine[loading_state]
         continue
 
     # If fix-gaze state
@@ -203,7 +206,7 @@ while active:
 
     elif current_state == state_machine[3]:  # If Stimulus state
         stimulus_image = display_stimulus(
-            screen, block_order[block_number-1], trial_selection)
+            screen, block_order[block_number-1], trial_selection,subject,image_file_names)
         draw_selection(screen, trial_selection)
         add_event_to_queue(subject, block_number,
                            trial_count, 7, stimulus_image)

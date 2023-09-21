@@ -11,9 +11,13 @@ import os
 from enum import IntEnum
 
 
-
-absolute_path = '/Users/raphaelb/Documents/UW/Research/gridlab/adbs_ocd/aat'
 pygame.init()
+pygame.mixer.init()
+pygame.mixer.music.load('beep.mp3')
+home_directory = os.path.expanduser('~')
+task_directory = os.getcwd()
+os.chdir(home_directory)
+
 # Define some constants
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -43,8 +47,8 @@ shape_size = size[0]/5
 FONT = pygame.font.SysFont("Arial", int(size[0]/40))
 clock = pygame.time.Clock()
 
-loading_screen_state_machine = ['Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome',
-                                'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start']
+loading_screen_state_machine = ['Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome','Wait to Start']
+                               # 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
 final_load_state = 4
@@ -52,6 +56,7 @@ final_load_state = 4
 state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
 current_state = state_machine[0]
+image_types = ['provoking/', 'neutral/']
 
 def find_brain_vision_tiggerbox_port():
     all_ports = serial.tools.list_ports.comports()
@@ -65,22 +70,17 @@ port = serial.Serial(find_brain_vision_tiggerbox_port())
 port.write([0x15]) #Approach Avoidance conflict task start task (output to brainvision) (0x15 = 21)
 port.write([0x00]) #turn off output
 
-pygame.mixer.init()
-pygame.mixer.music.load(absolute_path+'/audio/beep.mp3')
-
-class Events(IntEnum):
-    START_Task = 1
-    TWO = 2
-    THREE = 3
-
 def create_log_file(subject, study):
+    os.chdir(home_directory)
     # Create empty csv file to log event data
-    PATH = absolute_path + '/logger/' + study + '/' + subject
+    PATH = './Desktop/aact_logs/' + study + '/' + subject
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     version = '_v1.0.0'
-    date_string = datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")
+    date_string = datetime.now().strftime("%Y-%m-%d_%H.%M.%S.%f")
+    print(date_string)
     logger_file_name = PATH + '/logger_' + date_string + version + '.csv'
+    print(logger_file_name)
     with open(logger_file_name, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['timestamp', 'subject', 'block_type',
@@ -88,6 +88,10 @@ def create_log_file(subject, study):
         file.close()
     return logger_file_name
 
+def get_image_file_names(subject):
+    image_names = [os.listdir('./Desktop/provocation-images/' + subject + '/provoking'),
+                   os.listdir('./Desktop/provocation-images/' + subject + '/neutral')]
+    return image_names
 
 def randomize_blocks(num_of_blocks):
     k = 50  # 50% congruent - 50% conflict
@@ -102,8 +106,7 @@ def randomize_blocks(num_of_blocks):
 blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = randomize_blocks(blocks)
 block_types = ['congruent', 'conflict']
-num_of_trials = 5
-
+num_of_trials = 20
 
 def get_hexagon_pts(x, y, radius):
     pts = []
@@ -144,11 +147,13 @@ def draw_selection(surf, selection):
     pygame.draw.rect(surf, RED, border_rect, BORDER_SIZE)
 
 def display_fixation():
+    os.chdir(task_directory)
     gaze_target = pygame.image.load(
-    absolute_path+"/images/plus_symbol.png").convert()
+    "plus_symbol.png").convert()
     gaze_target = pygame.transform.scale(gaze_target, (25, 25))
     gaze_rect = gaze_target.get_rect()
     screen.blit(gaze_target, np.array(screen.get_rect().center) - np.array([gaze_rect.w, gaze_rect.h])/2)
+    os.chdir(task_directory)
 
 def generate_trial_points(block_type, shape):
     trial_reward_prob = reward_conflict_prob[block_type][shape][0]
@@ -174,12 +179,12 @@ def display_trial_points(screen, points, selection):
     screen.blit(txtsurf, points_coordinates)
 
 
-def display_stimulus(screen, block, shape):
+def display_stimulus(screen, block, shape, subject,image_file_names):
     trial_prov_prob = reward_conflict_prob[block][shape][1]
     image_type = np.random.choice(
-        ['provoking/', 'neutral/'], p=[trial_prov_prob, 1-trial_prov_prob])
-    which_image = str(random.randint(0, 9))
-    image_path = absolute_path+"/images/" + image_type + which_image + ".jpg"
+        [0, 1], p=[trial_prov_prob, 1-trial_prov_prob])
+    which_image = image_file_names[image_type][random.randint(0, 9)]
+    image_path = "./Desktop/provocation-images/" + subject + "/" + image_types[image_type] + which_image
     image = pygame.image.load(image_path).convert()
     image = pygame.transform.scale(
         image, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2))
@@ -218,6 +223,7 @@ def display_photodiode_boarder():
     pygame.draw.rect(screen, GRAY, photodiode_rect,5)
 
 def write_all_events_to_csv(logger_file_name):
+    os.chdir(home_directory)
     if not logger_queue.empty():
         with open(logger_file_name, 'a') as file:
             writer = csv.writer(file)
@@ -228,10 +234,12 @@ def write_all_events_to_csv(logger_file_name):
 
 def display_text_to_continue():
     my_font = pygame.font.SysFont("Arial", int(size[0]/75))
-    text_surf = my_font.render("Previous Page (Left Arrow)                      Next Page (Right Arrow)", True, WHITE)
+    text_surf = my_font.render("Press Enter to Continue", True, WHITE)
     screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
                 2, 3*size[1]/4 - text_surf.get_height() - 50))
 
+# def display_arrow_key_options():
+#     "Previous Page (Left Arrow) - Next Page (Right Arrow)"
 
 def display_id_query(user_text_subj_id, user_text_study_id, toggle):
     screen.fill(BLACK)
@@ -261,7 +269,7 @@ def display_id_query(user_text_subj_id, user_text_study_id, toggle):
     # render at position stated in arguments
     screen.blit(subj_text_surface, ((
         size[0]+txtsurf_subj.get_width())/2-10, size[1]/2 - subj_text_surface.get_height()/2))
-    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2,
+    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-40,
                 size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()))
 
     display_text_to_continue()
