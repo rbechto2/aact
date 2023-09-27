@@ -37,7 +37,7 @@ is_first_cycle_in_decision_state = False
 active = True
 while active:
     # limit to 60 frames per second
-    #clock.tick(60)
+    clock.tick(120)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             active = False
@@ -58,10 +58,16 @@ while active:
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
            
-            if loading_state <= final_load_state and (event.key == pygame.K_RETURN):# in[pygame.K_LEFT,pygame.K_RETURN, pygame.K_RIGHT]):    
+            if loading_state <= final_load_state and (event.key in [pygame.K_LEFT,pygame.K_RETURN, pygame.K_RIGHT]): #== pygame.K_RETURN):#
                 if has_entered_id:
-                    if loading_state == 2:
+                    if event.key == pygame.K_LEFT:
+                        if loading_state > 0:
+                            loading_state = loading_state - 1
+                            loading_screen_state = loading_screen_state_machine[loading_state]
+                        continue 
+                    elif loading_state == 2:
                         pygame.mixer.music.play()
+                        add_event_to_queue(subject, block_number, trial_count, 0x15,'Start Task')
                     elif loading_state == final_load_state:
                         loading_state = loading_state + 1
                         loading_screen_state = ''
@@ -114,7 +120,7 @@ while active:
                 continue
             case 'Wait to Start':
                 screen.fill(BLACK)
-                txtsurf = FONT.render("Press Right Arrow to Begin Block " + str(block_number), True, WHITE)
+                txtsurf = FONT.render("Press Enter to Begin Block " + str(block_number), True, WHITE)
                 screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() / 2, (size[0]/2 - txtsurf.get_height()) / 2))
                 pygame.display.update()
                 #TODO add countdown
