@@ -67,8 +67,6 @@ def find_brain_vision_tiggerbox_port():
             
            
 port = serial.Serial(find_brain_vision_tiggerbox_port())
-port.write([0x15]) #Approach Avoidance conflict task start task (output to brainvision) (0x15 = 21)
-port.write([0x00]) #turn off output
 
 def create_log_file(subject, study):
     os.chdir(home_directory)
@@ -238,8 +236,11 @@ def display_text_to_continue():
     screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
                 2, 3*size[1]/4 - text_surf.get_height() - 50))
 
-# def display_arrow_key_options():
-#     "Previous Page (Left Arrow) - Next Page (Right Arrow)"
+def display_arrow_key_options():
+    my_font = pygame.font.SysFont("Arial", int(size[0]/75))
+    text_surf = my_font.render("Previous Page (Left Arrow) - Next Page (Right Arrow)", True, WHITE)
+    screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
+                2, size[1] - text_surf.get_height() - 50))
 
 def display_id_query(user_text_subj_id, user_text_study_id, toggle):
     screen.fill(BLACK)
@@ -283,6 +284,7 @@ def display_task_name():
     screen.blit(task_name, (size[0]/2 - task_name.get_width() /
                 2, size[1]/2 - task_name.get_height()/2))
     display_text_to_continue()
+    display_arrow_key_options()
     pygame.display.update()
 
 
@@ -293,6 +295,7 @@ def display_audio_video_alignment():
     screen.blit(task_name, (size[0]/2 - task_name.get_width() /
                 2, size[1]/2 - task_name.get_height()/2))
     display_text_to_continue()
+    display_arrow_key_options()
     pygame.display.update()
 
 
@@ -323,6 +326,7 @@ def display_welcome():
     screen.blit(prompt_txt6, (size[0]/2 - prompt_txt6.get_width()/2,
                 size[1]/3 - prompt_txt6.get_height()/2+prompt_txt1.get_height()+prompt_txt2.get_height()+prompt_txt3.get_height()+prompt_txt4.get_height()+prompt_txt5.get_height()+task_txt.get_height()))
     display_text_to_continue()
+    display_arrow_key_options()
     pygame.display.update()
 
 def display_fixation_instructions():
@@ -334,6 +338,7 @@ def display_fixation_instructions():
     screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2, size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
     display_fixation()
     display_text_to_continue()
+    display_arrow_key_options()
     pygame.display.update()
 
 def display_fixation_instructions():
@@ -345,5 +350,6 @@ def display_fixation_instructions():
     screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2, size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
     display_fixation()
     display_text_to_continue()
+    display_arrow_key_options()
     pygame.display.update()
 
