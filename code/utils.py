@@ -9,14 +9,14 @@ import serial
 import serial.tools.list_ports
 import os
 from enum import IntEnum
+import time
 
 
 pygame.init()
 pygame.mixer.init()
-pygame.mixer.music.load('beep.mp3')
-home_directory = os.path.expanduser('~')
 task_directory = os.getcwd()
-os.chdir(home_directory)
+home_directory = os.path.expanduser('~')
+pygame.mixer.music.load(task_directory + '/media/audio/beep.mp3')
 
 # Define some constants
 BLACK = (0, 0, 0)
@@ -32,7 +32,7 @@ NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
 photodiode_length = 65  # pixels Should be 50
 photodiode_bool = True
-pulse_width = .1 #for signal sent to brain trigger box?
+pulse_width = .01 #for signal sent to brain trigger box?
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
@@ -66,12 +66,13 @@ def find_brain_vision_tiggerbox_port():
                 return port
             
            
-port = serial.Serial(find_brain_vision_tiggerbox_port())
+# port = serial.Serial(find_brain_vision_tiggerbox_port())
+# print(port.baudrate)
 
 def create_log_file(subject, study):
     os.chdir(home_directory)
     # Create empty csv file to log event data
-    PATH = './Desktop/aact_logs/' + study + '/' + subject
+    PATH = task_directory + '/aact_logs/' + study + '/' + subject
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     version = '_v1.0.0'
@@ -87,8 +88,8 @@ def create_log_file(subject, study):
     return logger_file_name
 
 def get_image_file_names(subject):
-    image_names = [os.listdir('./Desktop/provocation-images/' + subject + '/provoking'),
-                   os.listdir('./Desktop/provocation-images/' + subject + '/neutral')]
+    image_names = [os.listdir(home_directory + '/Desktop/provocation-images/' + subject + '/provoking'),
+                   os.listdir(home_directory + '/Desktop/provocation-images/' + subject + '/neutral')]
     return image_names
 
 def randomize_blocks(num_of_blocks):
@@ -147,7 +148,7 @@ def draw_selection(surf, selection):
 def display_fixation():
     os.chdir(task_directory)
     gaze_target = pygame.image.load(
-    "plus_symbol.png").convert()
+    task_directory + "/media/images/plus_symbol.png").convert()
     gaze_target = pygame.transform.scale(gaze_target, (25, 25))
     gaze_rect = gaze_target.get_rect()
     screen.blit(gaze_target, np.array(screen.get_rect().center) - np.array([gaze_rect.w, gaze_rect.h])/2)
@@ -182,7 +183,7 @@ def display_stimulus(screen, block, shape, subject,image_file_names):
     image_type = np.random.choice(
         [0, 1], p=[trial_prov_prob, 1-trial_prov_prob])
     which_image = image_file_names[image_type][random.randint(0, 9)]
-    image_path = "./Desktop/provocation-images/" + subject + "/" + image_types[image_type] + which_image
+    image_path = home_directory+"/Desktop/provocation-images/" + subject + "/" + image_types[image_type] + which_image
     image = pygame.image.load(image_path).convert()
     image = pygame.transform.scale(
         image, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2))
@@ -201,8 +202,11 @@ def update_displayed_points(screen, points):
 
 
 def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
-    port.write([event]) #Send event code to brain vision trigger box
-    port.write([0x00]) #turn off output
+    # port.write([event]) #Send event code to brain vision trigger box
+    # # port.flush()
+    # time.sleep(pulse_width) #hold on for pulse witdth duration
+    # #port.write([0x00]) #turn off output
+   
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,

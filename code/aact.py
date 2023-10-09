@@ -101,6 +101,7 @@ while active:
     if block_number > blocks:
         break  # Task Over
     if loading_state <= final_load_state:
+        
         match (loading_screen_state):
             case 'Enter IDs':
                 display_id_query(user_text_subj_id,user_text_study_id,toggle_enter_id)
