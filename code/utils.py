@@ -14,7 +14,7 @@ import time
 
 pygame.init()
 pygame.mixer.init()
-task_directory = os.getcwd()
+task_directory = os.path.dirname(os.path.dirname(__file__))
 home_directory = os.path.expanduser('~')
 pygame.mixer.music.load(task_directory + '/media/audio/beep.mp3')
 
@@ -30,7 +30,7 @@ GRAY = (88,84,84)
 BORDER_SIZE = 8
 NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
-photodiode_length = 65  # pixels Should be 50
+photodiode_length = 75  # 75-PD patients 65-provocation patients
 photodiode_bool = True
 pulse_width = .01 #for signal sent to brain trigger box?
 probs = np.array([.20, .50, .80])
@@ -61,23 +61,20 @@ image_types = ['provoking/', 'neutral/']
 def find_brain_vision_tiggerbox_port():
     all_ports = serial.tools.list_ports.comports()
     for port, desc, hwid in sorted(all_ports):
-            print("Port: ", port)
             if "Trigger" in port.lower() or "/dev/cu.usbmodem141213201" in port:
                 return port
             
            
-# port = serial.Serial(find_brain_vision_tiggerbox_port())
-# print(port.baudrate)
+port = serial.Serial(find_brain_vision_tiggerbox_port())
 
 def create_log_file(subject, study):
-    os.chdir(home_directory)
+    current_date = datetime.now().strftime("%Y-%m-%d")
     # Create empty csv file to log event data
-    PATH = task_directory + '/aact_logs/' + study + '/' + subject
+    PATH = home_directory + '/Desktop/PD_Data/' + study + '/' + subject + '/' + current_date + '/' + 'AACT'
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     version = '_v1.0.0'
     date_string = datetime.now().strftime("%Y-%m-%d_%H.%M.%S.%f")
-    print(date_string)
     logger_file_name = PATH + '/logger_' + date_string + version + '.csv'
     print(logger_file_name)
     with open(logger_file_name, 'w', newline='') as file:
@@ -105,7 +102,7 @@ def randomize_blocks(num_of_blocks):
 blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = randomize_blocks(blocks)
 block_types = ['congruent', 'conflict']
-num_of_trials = 20
+num_of_trials = 5
 
 def get_hexagon_pts(x, y, radius):
     pts = []
@@ -146,13 +143,11 @@ def draw_selection(surf, selection):
     pygame.draw.rect(surf, RED, border_rect, BORDER_SIZE)
 
 def display_fixation():
-    os.chdir(task_directory)
     gaze_target = pygame.image.load(
     task_directory + "/media/images/plus_symbol.png").convert()
     gaze_target = pygame.transform.scale(gaze_target, (25, 25))
     gaze_rect = gaze_target.get_rect()
     screen.blit(gaze_target, np.array(screen.get_rect().center) - np.array([gaze_rect.w, gaze_rect.h])/2)
-    os.chdir(task_directory)
 
 def generate_trial_points(block_type, shape):
     trial_reward_prob = reward_conflict_prob[block_type][shape][0]
@@ -202,9 +197,9 @@ def update_displayed_points(screen, points):
 
 
 def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
-    # port.write([event]) #Send event code to brain vision trigger box
-    # # port.flush()
-    # time.sleep(pulse_width) #hold on for pulse witdth duration
+    port.write([event]) #Send event code to brain vision trigger box
+    port.flush() #flush buffer, push event to triggerbox
+    time.sleep(pulse_width) #hold on for pulse witdth duration
     # #port.write([0x00]) #turn off output
    
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
@@ -215,17 +210,16 @@ def add_event_to_queue(subject, block_number, trial_count, event, extra_comments
 
 def toggle_photodiode_circle(photodiode_bool):
     border_rect_coords = np.array(
-        size) - np.array([photodiode_length, photodiode_length])/2
+        size) - np.array([photodiode_length, photodiode_length])/2 - 65
     pygame.draw.circle(screen, WHITE,border_rect_coords,photodiode_length/2-5)
     return
 
 def display_photodiode_boarder():
-    border_rect_coords = np.array(size) - np.array([photodiode_length, photodiode_length])
+    border_rect_coords = np.array(size) - np.array([photodiode_length, photodiode_length]) - 65
     photodiode_rect = pygame.Rect(border_rect_coords, (photodiode_length, photodiode_length))
     pygame.draw.rect(screen, GRAY, photodiode_rect,5)
 
 def write_all_events_to_csv(logger_file_name):
-    os.chdir(home_directory)
     if not logger_queue.empty():
         with open(logger_file_name, 'a') as file:
             writer = csv.writer(file)
@@ -241,10 +235,18 @@ def display_text_to_continue():
                 2, 3*size[1]/4 - text_surf.get_height() - 50))
 
 def display_arrow_key_options():
-    my_font = pygame.font.SysFont("Arial", int(size[0]/75))
-    text_surf = my_font.render("Previous Page (Left Arrow) - Next Page (Right Arrow)", True, WHITE)
-    screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
-                2, size[1] - text_surf.get_height() - 50))
+    arrowkey_target = pygame.image.load(
+    task_directory + "/media/images/arrow_keys.png").convert()
+    arrowkey_target = pygame.transform.scale_by(arrowkey_target, 0.25)
+    arrowkey_rect = arrowkey_target.get_rect()
+    arrow_key_coords = np.array(size) - np.array([arrowkey_rect.w/2+size[0]/2, arrowkey_rect.h + size[1]/36])
+    screen.blit(arrowkey_target, arrow_key_coords)
+
+    my_font = pygame.font.SysFont("Arial", int(size[0]/80))
+    text_surf_l = my_font.render("Previous", True, WHITE)
+    text_surf_r = my_font.render("Next", True, WHITE)
+    screen.blit(text_surf_l, (arrow_key_coords[0]-text_surf_l.get_width(), arrow_key_coords[1]-1.5*text_surf_l.get_height()+arrowkey_target.get_height()))
+    screen.blit(text_surf_r, (arrow_key_coords[0]+arrowkey_target.get_width(), arrow_key_coords[1]-1.5*text_surf_r.get_height()+arrowkey_target.get_height()))
 
 def display_id_query(user_text_subj_id, user_text_study_id, toggle):
     screen.fill(BLACK)
@@ -278,7 +280,6 @@ def display_id_query(user_text_subj_id, user_text_study_id, toggle):
                 size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()))
 
     display_text_to_continue()
-
     pygame.display.update()
 
 
