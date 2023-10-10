@@ -3,59 +3,27 @@ A behavioral task designed to quantify approach-avoidance behavior
 
 ## Description
 
-To start the task run the aact.py script. The task requires 10 provoking images and 10 neutral images to be placed on the Desktop. If needed, a sample of images can be found in media/images/provocation-images. Copy the provocation-images directory to the Desktop to run the task with generic images. The subject ID needs to be whatever the folder name inside provocation-images/ is. Currently the example images are under the subject id: test.
+To start the task run the aact.py script. The task requires 10 provoking images and 10 neutral images to be placed on the Desktop. If needed, a sample of images can be found in media/images/provocation-images. Copy the provocation-images directory to the Desktop to run the task with generic images. The subject ID needs to be whatever the folder name inside provocation-images/ is. Currently the example images are under the subject ID: test. The task starts asking for subjectID and study ID, you can switch between editing the two options using the tab key. After IDs have been entered you can use the enter key or right arrow to move to the next screen, or the left arrow key to go to the previous screen.
 
 ## Getting Started
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* Describe any prerequisites
+* Python 3.11, numpy, pygame, and pyserial
 
 ### Installing
-
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* Package Installation
+```
+pip install -r requirements.txt
+```
 
 ### Executing program
-
-* How to run the program
-* Step-by-step bullets
+1. Ensure the Desktop has a provocation-images directory, 10 neutral and 10 provoking. (Can copy directory aact/media/image/provocation-images to Desktop for sample images)
+2. Run python script
 ```
-code blocks for commands
-```
-
-## Help
-
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
+python code/aact.py
 ```
 
 ## Authors
-
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
-
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+Raphael Bechtold (raphaelb@uw.edu)
