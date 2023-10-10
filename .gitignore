@@ -1,8 +1,9 @@
-.vscode/*
+.vscode/
 venv/
 __pycache__/
 logger/
 code/build/
 .DS_Store
+.ipynb_checkpoints/
 analysis/.ipynb_checkpoints/aact_analysis-checkpoint.ipynb
 code/.DS_Store
