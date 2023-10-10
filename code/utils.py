@@ -61,7 +61,7 @@ image_types = ['provoking/', 'neutral/']
 def find_brain_vision_tiggerbox_port():
     all_ports = serial.tools.list_ports.comports()
     for port, desc, hwid in sorted(all_ports):
-            if "Trigger" in port.lower() or "/dev/cu.usbmodem141213201" in port:
+            if "COM3" in port or "trigger" in port.lower() or "/dev/cu.usbmodem141213201" in port:
                 return port
             
            
