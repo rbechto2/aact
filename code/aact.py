@@ -57,21 +57,24 @@ while active:
                 key_pressed = '3'
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
-           
-            if loading_state <= final_load_state and (event.key in [pygame.K_LEFT,pygame.K_RETURN, pygame.K_RIGHT]): #== pygame.K_RETURN):#
+
+            # == pygame.K_RETURN):#
+            if loading_state <= final_load_state and (event.key in [pygame.K_LEFT, pygame.K_RETURN, pygame.K_RIGHT]):
                 if has_entered_id:
                     if event.key == pygame.K_LEFT:
                         if loading_state > 0:
                             loading_state = loading_state - 1
                             loading_screen_state = loading_screen_state_machine[loading_state]
-                        continue 
+                        continue
                     elif loading_state == 2:
                         pygame.mixer.music.play()
-                        add_event_to_queue(subject, block_number, trial_count, 0x15,'Start Task')
+                        add_event_to_queue(
+                            subject, block_number, trial_count, 0x15, 'Start Task')
                     elif loading_state == final_load_state:
                         loading_state = loading_state + 1
                         loading_screen_state = ''
-                        add_event_to_queue(subject, block_number, trial_count, 0,'Start Block (Pressed Spacebar)')
+                        add_event_to_queue(
+                            subject, block_number, trial_count, 0, 'Start Block (Pressed Spacebar)')
                         continue
                     loading_state = loading_state + 1
                     loading_screen_state = loading_screen_state_machine[loading_state]
@@ -101,10 +104,11 @@ while active:
     if block_number > blocks:
         break  # Task Over
     if loading_state <= final_load_state:
-        
+
         match (loading_screen_state):
             case 'Enter IDs':
-                display_id_query(user_text_subj_id,user_text_study_id,toggle_enter_id)
+                display_id_query(user_text_subj_id,
+                                 user_text_study_id, toggle_enter_id)
             case 'Display Task Name':
                 display_task_name()
             case 'Audio-Video Alignment':
@@ -121,12 +125,13 @@ while active:
                 continue
             case 'Wait to Start':
                 screen.fill(BLACK)
-                txtsurf = FONT.render("Press Enter to Begin Block " + str(block_number), True, WHITE)
-                screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width() / 2, (size[0]/2 - txtsurf.get_height()) / 2))
+                txtsurf = FONT.render(
+                    "Press Enter to Begin Block " + str(block_number), True, WHITE)
+                screen.blit(
+                    txtsurf, (size[0]/2 - txtsurf.get_width() / 2, (size[0]/2 - txtsurf.get_height()) / 2))
                 pygame.display.update()
-                #TODO add countdown
+                # TODO add countdown
         continue
-    
 
     # Check if End of Block
     if trial_count > num_of_trials:
@@ -158,7 +163,7 @@ while active:
         pygame.event.clear()
         add_event_to_queue(subject, block_number, trial_count, 3,
                            'Start Trial Fix Gaze (End)')
-        
+
     elif current_state == state_machine[1]:  # If decision state
         draw_circle(screen, GREEN, circle_coords,
                     shape_size/2)
@@ -213,7 +218,7 @@ while active:
 
     elif current_state == state_machine[3]:  # If Stimulus state
         stimulus_image = display_stimulus(
-            screen, block_order[block_number-1], trial_selection,subject,image_file_names)
+            screen, block_order[block_number-1], trial_selection, subject, image_file_names)
         draw_selection(screen, trial_selection)
         add_event_to_queue(subject, block_number,
                            trial_count, 7, stimulus_image)
@@ -253,7 +258,7 @@ while active:
         pygame.time.delay(points_display_duration)
         current_state = state_machine[0]
         trial_count = trial_count + 1
-    
+
     display_photodiode_boarder()
     toggle_photodiode_circle(photodiode_bool)
     pygame.display.update()

@@ -26,13 +26,13 @@ GREEN = (34, 139, 34)
 RED = (200, 50, 50)
 BLUE = (50, 50, 255)
 DKGREEN = (0, 100, 0)
-GRAY = (88,84,84)
+GRAY = (88, 84, 84)
 BORDER_SIZE = 8
 NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
 photodiode_length = 75  # 75-PD patients 65-provocation patients
 photodiode_bool = True
-pulse_width = .01 #for signal sent to brain trigger box?
+pulse_width = .01  # for signal sent to brain trigger box?
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
@@ -47,8 +47,9 @@ shape_size = size[0]/5
 FONT = pygame.font.SysFont("Arial", int(size[0]/40))
 clock = pygame.time.Clock()
 
-loading_screen_state_machine = ['Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome','Wait to Start']
-                               # 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start']
+loading_screen_state_machine = [
+    'Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome', 'Wait to Start']
+# 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
 final_load_state = 4
@@ -58,19 +59,22 @@ state_machine = ['start', 'decision', 'stimulus_anticipation',
 current_state = state_machine[0]
 image_types = ['provoking/', 'neutral/']
 
+
 def find_brain_vision_tiggerbox_port():
     all_ports = serial.tools.list_ports.comports()
     for port, desc, hwid in sorted(all_ports):
-            if "COM3" in port or "trigger" in port.lower() or "/dev/cu.usbmodem141213201" in port:
-                return port
-            
-           
+        if "COM3" in port or "trigger" in port.lower() or "/dev/cu.usbmodem141213201" in port:
+            return port
+
+
 port = serial.Serial(find_brain_vision_tiggerbox_port())
+
 
 def create_log_file(subject, study):
     current_date = datetime.now().strftime("%Y-%m-%d")
     # Create empty csv file to log event data
-    PATH = home_directory + '/Desktop/PD_Data/' + study + '/' + subject + '/' + current_date + '/' + 'AACT'
+    PATH = home_directory + '/Desktop/PD_Data/' + study + \
+        '/' + subject + '/' + current_date + '/' + 'AACT'
     if not os.path.exists(PATH):
         os.makedirs(PATH)
     version = '_v1.0.0'
@@ -84,10 +88,12 @@ def create_log_file(subject, study):
         file.close()
     return logger_file_name
 
+
 def get_image_file_names(subject):
     image_names = [os.listdir(home_directory + '/Desktop/provocation-images/' + subject + '/provoking'),
                    os.listdir(home_directory + '/Desktop/provocation-images/' + subject + '/neutral')]
     return image_names
+
 
 def randomize_blocks(num_of_blocks):
     k = 50  # 50% congruent - 50% conflict
@@ -103,6 +109,7 @@ blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = randomize_blocks(blocks)
 block_types = ['congruent', 'conflict']
 num_of_trials = 5
+
 
 def get_hexagon_pts(x, y, radius):
     pts = []
@@ -142,12 +149,15 @@ def draw_selection(surf, selection):
     border_rect = pygame.Rect(border_rect_coords, (side_len, side_len))
     pygame.draw.rect(surf, RED, border_rect, BORDER_SIZE)
 
+
 def display_fixation():
     gaze_target = pygame.image.load(
-    task_directory + "/media/images/plus_symbol.png").convert()
+        task_directory + "/media/images/plus_symbol.png").convert()
     gaze_target = pygame.transform.scale(gaze_target, (25, 25))
     gaze_rect = gaze_target.get_rect()
-    screen.blit(gaze_target, np.array(screen.get_rect().center) - np.array([gaze_rect.w, gaze_rect.h])/2)
+    screen.blit(gaze_target, np.array(screen.get_rect().center) -
+                np.array([gaze_rect.w, gaze_rect.h])/2)
+
 
 def generate_trial_points(block_type, shape):
     trial_reward_prob = reward_conflict_prob[block_type][shape][0]
@@ -173,12 +183,13 @@ def display_trial_points(screen, points, selection):
     screen.blit(txtsurf, points_coordinates)
 
 
-def display_stimulus(screen, block, shape, subject,image_file_names):
+def display_stimulus(screen, block, shape, subject, image_file_names):
     trial_prov_prob = reward_conflict_prob[block][shape][1]
     image_type = np.random.choice(
         [0, 1], p=[trial_prov_prob, 1-trial_prov_prob])
     which_image = image_file_names[image_type][random.randint(0, 9)]
-    image_path = home_directory+"/Desktop/provocation-images/" + subject + "/" + image_types[image_type] + which_image
+    image_path = home_directory+"/Desktop/provocation-images/" + \
+        subject + "/" + image_types[image_type] + which_image
     image = pygame.image.load(image_path).convert()
     image = pygame.transform.scale(
         image, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2))
@@ -197,27 +208,32 @@ def update_displayed_points(screen, points):
 
 
 def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
-    port.write([event]) #Send event code to brain vision trigger box
-    port.flush() #flush buffer, push event to triggerbox
-    time.sleep(pulse_width) #hold on for pulse witdth duration
-    # #port.write([0x00]) #turn off output
-   
+    port.write([event])  # Send event code to brain vision trigger box
+    port.flush()  # flush buffer, push event to triggerbox
+    time.sleep(pulse_width)  # hold on for pulse witdth duration
+
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
                      block_number, trial_count, current_state, event, extra_comments])
-    return 
+    return
+
 
 def toggle_photodiode_circle(photodiode_bool):
     border_rect_coords = np.array(
         size) - np.array([photodiode_length, photodiode_length])/2 - 65
-    pygame.draw.circle(screen, WHITE,border_rect_coords,photodiode_length/2-5)
+    pygame.draw.circle(screen, WHITE, border_rect_coords,
+                       photodiode_length/2-5)
     return
 
+
 def display_photodiode_boarder():
-    border_rect_coords = np.array(size) - np.array([photodiode_length, photodiode_length]) - 65
-    photodiode_rect = pygame.Rect(border_rect_coords, (photodiode_length, photodiode_length))
-    pygame.draw.rect(screen, GRAY, photodiode_rect,5)
+    border_rect_coords = np.array(
+        size) - np.array([photodiode_length, photodiode_length]) - 65
+    photodiode_rect = pygame.Rect(
+        border_rect_coords, (photodiode_length, photodiode_length))
+    pygame.draw.rect(screen, GRAY, photodiode_rect, 5)
+
 
 def write_all_events_to_csv(logger_file_name):
     if not logger_queue.empty():
@@ -228,25 +244,31 @@ def write_all_events_to_csv(logger_file_name):
             file.close()
     return
 
+
 def display_text_to_continue():
     my_font = pygame.font.SysFont("Arial", int(size[0]/75))
     text_surf = my_font.render("Press Enter to Continue", True, WHITE)
     screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
                 2, 3*size[1]/4 - text_surf.get_height() - 50))
 
+
 def display_arrow_key_options():
     arrowkey_target = pygame.image.load(
-    task_directory + "/media/images/arrow_keys.png").convert()
+        task_directory + "/media/images/arrow_keys.png").convert()
     arrowkey_target = pygame.transform.scale_by(arrowkey_target, 0.25)
     arrowkey_rect = arrowkey_target.get_rect()
-    arrow_key_coords = np.array(size) - np.array([arrowkey_rect.w/2+size[0]/2, arrowkey_rect.h + size[1]/36])
+    arrow_key_coords = np.array(
+        size) - np.array([arrowkey_rect.w/2+size[0]/2, arrowkey_rect.h + size[1]/36])
     screen.blit(arrowkey_target, arrow_key_coords)
 
     my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     text_surf_l = my_font.render("Previous", True, WHITE)
     text_surf_r = my_font.render("Next", True, WHITE)
-    screen.blit(text_surf_l, (arrow_key_coords[0]-text_surf_l.get_width(), arrow_key_coords[1]-1.5*text_surf_l.get_height()+arrowkey_target.get_height()))
-    screen.blit(text_surf_r, (arrow_key_coords[0]+arrowkey_target.get_width(), arrow_key_coords[1]-1.5*text_surf_r.get_height()+arrowkey_target.get_height()))
+    screen.blit(text_surf_l, (arrow_key_coords[0]-text_surf_l.get_width(
+    ), arrow_key_coords[1]-1.5*text_surf_l.get_height()+arrowkey_target.get_height()))
+    screen.blit(text_surf_r, (arrow_key_coords[0]+arrowkey_target.get_width(
+    ), arrow_key_coords[1]-1.5*text_surf_r.get_height()+arrowkey_target.get_height()))
+
 
 def display_id_query(user_text_subj_id, user_text_study_id, toggle):
     screen.fill(BLACK)
@@ -308,13 +330,18 @@ def display_welcome():
     screen.fill(BLACK)
     my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     task_txt = FONT.render("Welcome!", True, WHITE)
-    prompt_txt1 = my_font.render("During the task, you will be asked to select between three shapes using the 1, 2, or 3 button keys, after which an image will appear and points will be awarded. ", True, WHITE)
-    prompt_txt2 = my_font.render("The goal of the task is to maximize your score. Each shape will have a different probability of displaying a neutral or anxiety-provoking image and different", True, WHITE)
-    prompt_txt3 = my_font.render("probabilities for either gaining or losing points for that trial. These probabilities will stay consistent within a single block. There will be", True, WHITE)
-    prompt_txt4 = my_font.render("two types of blocks: congruent and conflict blocks. Decisions during congruent trials will award more points for displaying neutral images", True, WHITE)
-    prompt_txt5 = my_font.render("or take points away for displaying provoking images, while conflict trials will awards more points for displaying provoking images", True, WHITE)
-    prompt_txt6 = my_font.render(" and take points away for displaying neutral images.", True, WHITE)
-
+    prompt_txt1 = my_font.render(
+        "During the task, you will be asked to select between three shapes using the 1, 2, or 3 button keys, after which an image will appear and points will be awarded. ", True, WHITE)
+    prompt_txt2 = my_font.render(
+        "The goal of the task is to maximize your score. Each shape will have a different probability of displaying a neutral or anxiety-provoking image and different", True, WHITE)
+    prompt_txt3 = my_font.render(
+        "probabilities for either gaining or losing points for that trial. These probabilities will stay consistent within a single block. There will be", True, WHITE)
+    prompt_txt4 = my_font.render(
+        "two types of blocks: congruent and conflict blocks. Decisions during congruent trials will award more points for displaying neutral images", True, WHITE)
+    prompt_txt5 = my_font.render(
+        "or take points away for displaying provoking images, while conflict trials will awards more points for displaying provoking images", True, WHITE)
+    prompt_txt6 = my_font.render(
+        " and take points away for displaying neutral images.", True, WHITE)
 
     screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
                 2, size[1]/3 - task_txt.get_height()/2))
@@ -334,27 +361,36 @@ def display_welcome():
     display_arrow_key_options()
     pygame.display.update()
 
+
 def display_fixation_instructions():
     screen.fill(BLACK)
     my_font = pygame.font.SysFont("Arial", int(size[0]/50))
-    task_txt = my_font.render("Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
-    prompt_txt = my_font.render("Try to keep your eyes focused on the fixation cross during the task.", True, WHITE)
-    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() / 2, size[1]/3 - task_txt.get_height()/2))
-    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2, size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
+    task_txt = my_font.render(
+        "Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
+    prompt_txt = my_font.render(
+        "Try to keep your eyes focused on the fixation cross during the task.", True, WHITE)
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
+                2, size[1]/3 - task_txt.get_height()/2))
+    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2,
+                size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
     display_fixation()
     display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
 
+
 def display_fixation_instructions():
     screen.fill(BLACK)
     my_font = pygame.font.SysFont("Arial", int(size[0]/50))
-    task_txt = my_font.render("Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
-    prompt_txt = my_font.render("Try to keep your eyes focused on the fixation cross during the task.", True, WHITE)
-    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() / 2, size[1]/3 - task_txt.get_height()/2))
-    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2, size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
+    task_txt = my_font.render(
+        "Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
+    prompt_txt = my_font.render(
+        "Try to keep your eyes focused on the fixation cross during the task.", True, WHITE)
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
+                2, size[1]/3 - task_txt.get_height()/2))
+    screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2,
+                size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
     display_fixation()
     display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
-
