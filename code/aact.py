@@ -14,6 +14,7 @@ user_text_subj_id = ''
 user_text_study_id = ''
 toggle_enter_id = True
 has_entered_id = False
+is_practice_trial = False
 
 # provides offset so center of object is at desired coordinates
 circle_center_offset = np.array([0, 0])
@@ -57,9 +58,8 @@ while active:
                 key_pressed = '3'
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
-
-            # == pygame.K_RETURN):#
-            if loading_state <= final_load_state and (event.key in [pygame.K_LEFT, pygame.K_RETURN, pygame.K_RIGHT]):
+                
+            if loading_state < final_load_state and (event.key in [pygame.K_LEFT, pygame.K_RETURN, pygame.K_RIGHT]) and not is_practice_trial:
                 if has_entered_id:
                     if event.key == pygame.K_LEFT:
                         if loading_state > 0:
@@ -70,12 +70,9 @@ while active:
                         pygame.mixer.music.play()
                         add_event_to_queue(
                             subject, block_number, trial_count, 0x15, 'Start Task')
-                    elif loading_state == final_load_state:
-                        loading_state = loading_state + 1
-                        loading_screen_state = ''
+                    elif loading_state == final_load_state-1:
                         add_event_to_queue(
-                            subject, block_number, trial_count, 0, 'Start Block (Pressed Spacebar)')
-                        continue
+                            subject, block_number, trial_count, 0, 'Start Block (Pressed Enter)')
                     loading_state = loading_state + 1
                     loading_screen_state = loading_screen_state_machine[loading_state]
                     continue
@@ -103,8 +100,7 @@ while active:
 
     if block_number > blocks:
         break  # Task Over
-    if loading_state <= final_load_state:
-
+    if not is_practice_trial and loading_state <= final_load_state:
         match (loading_screen_state):
             case 'Enter IDs':
                 display_id_query(user_text_subj_id,
@@ -118,19 +114,23 @@ while active:
             case'Fixation Instructions':
                 display_fixation_instructions()
             case 'Start Practice Trial':
-                continue
+                display_practice_instructions()
+                add_event_to_queue(subject, block_number, trial_count, 12, 'Start Practice Trial')
             case 'Is Practice Trial':
-                continue
+                is_practice_trial = True
+                loading_state = loading_state + 1
+                loading_screen_state = loading_screen_state_machine[loading_state]
             case 'Movement Warning':
-                continue
+                add_event_to_queue(subject, block_number, trial_count, 12, 'End Practice Trial')
+                display_movement_warning()
+                trial_count = 0 #rest trial count after practice trial
+                points = 0
             case 'Wait to Start':
-                screen.fill(BLACK)
-                txtsurf = FONT.render(
-                    "Press Enter to Begin Block " + str(block_number), True, WHITE)
-                screen.blit(
-                    txtsurf, (size[0]/2 - txtsurf.get_width() / 2, (size[0]/2 - txtsurf.get_height()) / 2))
-                pygame.display.update()
-                # TODO add countdown
+                display_wait_to_start(block_number)
+            case 'Countdown':
+                display_countdown()
+                loading_state = loading_state + 1
+                loading_screen_state = ''
         continue
 
     # Check if End of Block
@@ -138,7 +138,7 @@ while active:
         trial_count = 0
         block_number = block_number + 1
         current_state = state_machine[0]
-        loading_state = 4
+        loading_state = final_load_state - 1
         loading_screen_state = loading_screen_state_machine[loading_state]
         continue
 
@@ -218,7 +218,7 @@ while active:
 
     elif current_state == state_machine[3]:  # If Stimulus state
         stimulus_image = display_stimulus(
-            screen, block_order[block_number-1], trial_selection, subject, image_file_names)
+            screen, block_order[block_number-1], trial_selection, subject, image_file_names,is_practice_trial)
         draw_selection(screen, trial_selection)
         add_event_to_queue(subject, block_number,
                            trial_count, 7, stimulus_image)
@@ -246,7 +246,7 @@ while active:
 
     elif current_state == state_machine[5]:  # If Reward state
         trial_points = generate_trial_points(
-            block_order[block_number-1], trial_selection)
+            block_order[block_number-1], trial_selection,is_practice_trial)
         points = points + trial_points
         draw_selection(screen, trial_selection)
         display_trial_points(screen, trial_points, trial_selection)
@@ -258,11 +258,12 @@ while active:
         pygame.time.delay(points_display_duration)
         current_state = state_machine[0]
         trial_count = trial_count + 1
+        if is_practice_trial: is_practice_trial = False #End Practice Trial
 
     display_photodiode_boarder()
     toggle_photodiode_circle(photodiode_bool)
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 
-port.close()
+#port.close()
 pygame.quit()

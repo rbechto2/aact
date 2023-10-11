@@ -48,11 +48,10 @@ FONT = pygame.font.SysFont("Arial", int(size[0]/40))
 clock = pygame.time.Clock()
 
 loading_screen_state_machine = [
-    'Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome', 'Wait to Start']
-# 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start']
+    'Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome', 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial','Movement Warning','Wait to Start','Countdown']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
-final_load_state = 4
+final_load_state = 9
 
 state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
@@ -67,7 +66,7 @@ def find_brain_vision_tiggerbox_port():
             return port
 
 
-port = serial.Serial(find_brain_vision_tiggerbox_port())
+# port = serial.Serial(find_brain_vision_tiggerbox_port())
 
 
 def create_log_file(subject, study):
@@ -108,7 +107,7 @@ def randomize_blocks(num_of_blocks):
 blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = randomize_blocks(blocks)
 block_types = ['congruent', 'conflict']
-num_of_trials = 5
+num_of_trials = 2
 
 
 def get_hexagon_pts(x, y, radius):
@@ -159,7 +158,9 @@ def display_fixation():
                 np.array([gaze_rect.w, gaze_rect.h])/2)
 
 
-def generate_trial_points(block_type, shape):
+def generate_trial_points(block_type, shape,is_practice_trial):
+    print(is_practice_trial)
+    if is_practice_trial : return 10 #If practice Trial give Postive reward
     trial_reward_prob = reward_conflict_prob[block_type][shape][0]
     sign = np.random.choice(
         [1, -1], p=[trial_reward_prob, 1-trial_reward_prob])
@@ -175,7 +176,7 @@ def display_trial_points(screen, points, selection):
         color = RED
         sign = ''
 
-    point_font = pygame.font.SysFont("Arial", 256)
+    point_font = pygame.font.SysFont("Arial", int(size[1]/6))
     txtsurf = point_font.render(sign + str(points), True, color)
 
     points_coordinates = np.array(
@@ -183,10 +184,11 @@ def display_trial_points(screen, points, selection):
     screen.blit(txtsurf, points_coordinates)
 
 
-def display_stimulus(screen, block, shape, subject, image_file_names):
+def display_stimulus(screen, block, shape, subject, image_file_names,is_practice_trial):
     trial_prov_prob = reward_conflict_prob[block][shape][1]
     image_type = np.random.choice(
         [0, 1], p=[trial_prov_prob, 1-trial_prov_prob])
+    if is_practice_trial : image_type = 1 #If practice Trial give neutral Image
     which_image = image_file_names[image_type][random.randint(0, 9)]
     image_path = home_directory+"/Desktop/provocation-images/" + \
         subject + "/" + image_types[image_type] + which_image
@@ -208,9 +210,10 @@ def update_displayed_points(screen, points):
 
 
 def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
-    port.write([event])  # Send event code to brain vision trigger box
-    port.flush()  # flush buffer, push event to triggerbox
-    time.sleep(pulse_width)  # hold on for pulse witdth duration
+    # port.write([event])  # Send event code to brain vision trigger box
+    # port.flush()  # flush buffer, push event to triggerbox
+    # time.sleep(pulse_width)  # hold on for pulse witdth duration
+    #port.write([0x00]) 
 
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
@@ -364,7 +367,7 @@ def display_welcome():
 
 def display_fixation_instructions():
     screen.fill(BLACK)
-    my_font = pygame.font.SysFont("Arial", int(size[0]/50))
+    my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     task_txt = my_font.render(
         "Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
     prompt_txt = my_font.render(
@@ -379,18 +382,45 @@ def display_fixation_instructions():
     pygame.display.update()
 
 
-def display_fixation_instructions():
+def display_practice_instructions():
     screen.fill(BLACK)
-    my_font = pygame.font.SysFont("Arial", int(size[0]/50))
+    my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     task_txt = my_font.render(
-        "Throughout the experiment, you'll see this fixation cross at the center of the screen.", True, WHITE)
+        "Next, you will do one practice trial.", True, WHITE)
     prompt_txt = my_font.render(
-        "Try to keep your eyes focused on the fixation cross during the task.", True, WHITE)
+        "During the example, please choose the circle by pressing \"1\" on the keyboard.", True, WHITE)
     screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
                 2, size[1]/3 - task_txt.get_height()/2))
     screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2,
                 size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
+    display_text_to_continue()
+    display_arrow_key_options()
+    pygame.display.update()
+
+def display_movement_warning():
+    screen.fill(BLACK)
+    my_font = pygame.font.SysFont("Arial", int(size[0]/80))
+    task_txt = my_font.render(
+        "Try not to talk or move around more than necessary, as movements affect the quality of the recordings. ", True, WHITE)
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
+                2, size[1]/3 - task_txt.get_height()/2))
     display_fixation()
     display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
+
+def display_wait_to_start(block_number):
+    screen.fill(BLACK)
+    txtsurf = FONT.render(
+        "Press Enter to Begin Block " + str(block_number), True, WHITE)
+    screen.blit(
+        txtsurf, (size[0]/2 - txtsurf.get_width() / 2, size[1]/2 - txtsurf.get_height()/2))
+    pygame.display.update()
+
+def display_countdown():
+    for i in [3,2,1]:
+        screen.fill(BLACK)
+        txtsurf = FONT.render(str(i), True, WHITE)
+        screen.blit(txtsurf, (size[0]/2 - txtsurf.get_width()/2, size[1]/2 - txtsurf.get_height()/2))
+        pygame.display.update()
+        pygame.time.delay(1000)
