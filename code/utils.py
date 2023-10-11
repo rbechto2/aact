@@ -159,7 +159,6 @@ def display_fixation():
 
 
 def generate_trial_points(block_type, shape, is_practice_trial):
-    print(is_practice_trial)
     if is_practice_trial:
         return 10  # If practice Trial give Postive reward
     trial_reward_prob = reward_conflict_prob[block_type][shape][0]
