@@ -58,7 +58,7 @@ while active:
                 key_pressed = '3'
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
-                
+
             if loading_state < final_load_state and (event.key in [pygame.K_LEFT, pygame.K_RETURN, pygame.K_RIGHT]) and not is_practice_trial:
                 if has_entered_id:
                     if event.key == pygame.K_LEFT:
@@ -115,15 +115,17 @@ while active:
                 display_fixation_instructions()
             case 'Start Practice Trial':
                 display_practice_instructions()
-                add_event_to_queue(subject, block_number, trial_count, 12, 'Start Practice Trial')
+                add_event_to_queue(subject, block_number,
+                                   trial_count, 12, 'Start Practice Trial')
             case 'Is Practice Trial':
                 is_practice_trial = True
                 loading_state = loading_state + 1
                 loading_screen_state = loading_screen_state_machine[loading_state]
             case 'Movement Warning':
-                add_event_to_queue(subject, block_number, trial_count, 12, 'End Practice Trial')
+                add_event_to_queue(subject, block_number,
+                                   trial_count, 12, 'End Practice Trial')
                 display_movement_warning()
-                trial_count = 0 #rest trial count after practice trial
+                trial_count = 0  # rest trial count after practice trial
                 points = 0
             case 'Wait to Start':
                 display_wait_to_start(block_number)
@@ -218,7 +220,7 @@ while active:
 
     elif current_state == state_machine[3]:  # If Stimulus state
         stimulus_image = display_stimulus(
-            screen, block_order[block_number-1], trial_selection, subject, image_file_names,is_practice_trial)
+            screen, block_order[block_number-1], trial_selection, subject, image_file_names, is_practice_trial)
         draw_selection(screen, trial_selection)
         add_event_to_queue(subject, block_number,
                            trial_count, 7, stimulus_image)
@@ -246,7 +248,7 @@ while active:
 
     elif current_state == state_machine[5]:  # If Reward state
         trial_points = generate_trial_points(
-            block_order[block_number-1], trial_selection,is_practice_trial)
+            block_order[block_number-1], trial_selection, is_practice_trial)
         points = points + trial_points
         draw_selection(screen, trial_selection)
         display_trial_points(screen, trial_points, trial_selection)
@@ -258,12 +260,13 @@ while active:
         pygame.time.delay(points_display_duration)
         current_state = state_machine[0]
         trial_count = trial_count + 1
-        if is_practice_trial: is_practice_trial = False #End Practice Trial
+        if is_practice_trial:
+            is_practice_trial = False  # End Practice Trial
 
     display_photodiode_boarder()
     toggle_photodiode_circle(photodiode_bool)
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 
-#port.close()
+# port.close()
 pygame.quit()
