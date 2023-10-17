@@ -1,8 +1,4 @@
-import pygame
-import numpy as np
 from utils import *
-
-pygame.init()
 
 block_number = 1
 points = 0
@@ -34,10 +30,11 @@ trial_selection = None
 is_anticipation = False
 key_pressed = ''
 is_first_cycle_in_decision_state = False
+trial_time = 0
 
 active = True
 while active:
-    # limit to 60 frames per second
+    # limit to 120 frames per second
     clock.tick(120)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -70,6 +67,8 @@ while active:
                         pygame.mixer.music.play()
                         add_event_to_queue(
                             subject, block_number, trial_count, 0x15, 'Start Task')
+                    elif loading_state == 5:
+                        add_event_to_queue(subject, block_number, trial_count, 12, 'Start Practice Trial')
                     elif loading_state == final_load_state-1:
                         add_event_to_queue(
                             subject, block_number, trial_count, 0, 'Start Block (Pressed Enter)')
@@ -115,15 +114,11 @@ while active:
                 display_fixation_instructions()
             case 'Start Practice Trial':
                 display_practice_instructions()
-                add_event_to_queue(subject, block_number,
-                                   trial_count, 12, 'Start Practice Trial')
             case 'Is Practice Trial':
                 is_practice_trial = True
                 loading_state = loading_state + 1
                 loading_screen_state = loading_screen_state_machine[loading_state]
             case 'Movement Warning':
-                add_event_to_queue(subject, block_number,
-                                   trial_count, 12, 'End Practice Trial')
                 display_movement_warning()
                 trial_count = 0  # rest trial count after practice trial
                 points = 0
@@ -165,8 +160,15 @@ while active:
         pygame.event.clear()
         add_event_to_queue(subject, block_number, trial_count, 3,
                            'Start Trial Fix Gaze (End)')
+        trial_time = 0
+        clock.tick()
 
     elif current_state == state_machine[1]:  # If decision state
+        trial_time = trial_time+clock.get_rawtime()
+        if trial_time > 3500: #If trial lasts more than 3.5 seconds, end trial
+            current_state = state_machine[0]
+            display_trial_timeout()
+            continue
         draw_circle(screen, GREEN, circle_coords,
                     shape_size/2)
         draw_square(screen, BLUE, pygame.Rect(
@@ -221,7 +223,7 @@ while active:
     elif current_state == state_machine[3]:  # If Stimulus state
         stimulus_image = display_stimulus(
             screen, block_order[block_number-1], trial_selection, subject, image_file_names, is_practice_trial)
-        draw_selection(screen, trial_selection)
+        draw_selection(screen, trial_selection,True)
         add_event_to_queue(subject, block_number,
                            trial_count, 7, stimulus_image)
         pygame.display.update()
@@ -250,7 +252,7 @@ while active:
         trial_points = generate_trial_points(
             block_order[block_number-1], trial_selection, is_practice_trial)
         points = points + trial_points
-        draw_selection(screen, trial_selection)
+        draw_selection(screen, trial_selection,True)
         display_trial_points(screen, trial_points, trial_selection)
         update_displayed_points(screen, points)
         pygame.display.update()
@@ -262,6 +264,7 @@ while active:
         trial_count = trial_count + 1
         if is_practice_trial:
             is_practice_trial = False  # End Practice Trial
+            add_event_to_queue(subject, block_number, trial_count, 12, 'End Practice Trial')
 
     display_photodiode_boarder()
     toggle_photodiode_circle(photodiode_bool)
