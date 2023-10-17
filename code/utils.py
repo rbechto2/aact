@@ -141,10 +141,15 @@ def draw_hexagon(surf, color, x, y, radius, border=False):
         draw_selection(surf, 2)
 
 
-def draw_selection(surf, selection):
-    side_len = shape_size+50
-    border_rect_coords = main_center_coords[selection] - \
-        (np.array([side_len, side_len]))/2
+def draw_selection(surf, selection, is_center=False):
+    if is_center:
+        side_len = shape_size*1.5+50
+        border_rect_coords = np.array(size)/2 - \
+            (np.array([side_len, side_len]))/2
+    else:
+        side_len = shape_size+50
+        border_rect_coords = main_center_coords[selection] - \
+            (np.array([side_len, side_len]))/2
     border_rect = pygame.Rect(border_rect_coords, (side_len, side_len))
     pygame.draw.rect(surf, RED, border_rect, BORDER_SIZE)
 
@@ -179,8 +184,7 @@ def display_trial_points(screen, points, selection):
     point_font = pygame.font.SysFont("Arial", int(size[1]/6))
     txtsurf = point_font.render(sign + str(points), True, color)
 
-    points_coordinates = np.array(
-        main_center_coords[selection]) - np.array(txtsurf.get_size())/2
+    points_coordinates = np.array(size)/2 - np.array(txtsurf.get_size())/2
     screen.blit(txtsurf, points_coordinates)
 
 
@@ -195,18 +199,18 @@ def display_stimulus(screen, block, shape, subject, image_file_names, is_practic
         subject + "/" + image_types[image_type] + which_image
     image = pygame.image.load(image_path).convert()
     image = pygame.transform.scale(
-        image, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2))
+        image, (shape_size*1.5, shape_size*1.5))
     image_rect = image.get_rect()
     screen.blit(
-        image, main_center_coords[shape, :] - np.array([image_rect.w, image_rect.h-2])/2)
-    return image_path[9::]
+        image, np.array(size)/2 - np.array([image_rect.w, image_rect.h])/2)
+    return image_path
 
 
 def update_displayed_points(screen, points):
     txtsurf = FONT.render("You have " + str(points) + " points", True, WHITE)
     # points_coordinates = np.array([screen.get_rect().w/2,screen.get_rect().h-200]) - np.array(txtsurf.get_size())/2
     points_coordinates = np.array(
-        screen.get_rect().center) - np.array(txtsurf.get_size())/2
+        screen.get_rect().center) - np.array(txtsurf.get_size())/2 + np.array([0,shape_size/1.5])
     screen.blit(txtsurf, points_coordinates)
 
 
@@ -429,3 +433,12 @@ def display_countdown():
             txtsurf, (size[0]/2 - txtsurf.get_width()/2, size[1]/2 - txtsurf.get_height()/2))
         pygame.display.update()
         pygame.time.delay(1000)
+
+def display_trial_timeout():
+    screen.fill(BLACK)
+    txtsurf = FONT.render(
+        "Timed out, Redo Trial" , True, WHITE)
+    screen.blit(
+        txtsurf, (size[0]/2 - txtsurf.get_width() / 2, size[1]/2 - txtsurf.get_height()/2))
+    pygame.display.update()
+    pygame.time.delay(1000)
