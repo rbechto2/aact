@@ -310,7 +310,7 @@ def display_id_query(user_text_subj_id, user_text_study_id, toggle):
         ).bottomleft, txtsurf_study.get_rect().bottomright, 5)
         pygame.draw.line(study_text_surface, WHITE, study_text_surface.get_rect(
         ).bottomleft, study_text_surface.get_rect().bottomright, 5)
-    print(size)
+
     # Display "Subject ID"
     screen.blit(txtsurf_subj, (size[0]/2 - txtsurf_subj.get_width()/ 2-size[0]/256, size[1]/2 - txtsurf_subj.get_height()/2))
     # Display "Study ID"
