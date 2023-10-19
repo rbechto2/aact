@@ -44,14 +44,28 @@ size = screen.get_size()
 main_center_coords = np.array(
     [[size[0]/4, 2*size[1]/3], [size[0]/2, size[1]/4], [3*size[0]/4, 2*size[1]/3]])
 shape_size = size[0]/5
+
+# provides offset so center of object is at desired coordinates
+circle_center_offset = np.array([0, 0])
+circle_coords = main_center_coords[0, :] - circle_center_offset
+
+# provides offset so center of object is at desired coordinates
+square_center_offset = np.array(
+    [math.sqrt(3)*shape_size/4, math.sqrt(3)*shape_size/4])
+square_coords = main_center_coords[1, :] - square_center_offset
+
+# provides offset so center of object is at desired coordinates
+hexagon_center_offset = np.array(
+    [-math.sqrt(3)*shape_size/4, (shape_size/4)])
+hexagon_coords = main_center_coords[2, :] - hexagon_center_offset
 FONT = pygame.font.SysFont("Arial", int(size[0]/40))
 clock = pygame.time.Clock()
 
 loading_screen_state_machine = [
-    'Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome', 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start', 'Countdown']
+    'Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome1','Welcome2', 'Fixation Instructions', 'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start', 'Countdown']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
-final_load_state = 9
+final_load_state = 10
 
 state_machine = ['start', 'decision', 'stimulus_anticipation',
                  'stimulus', 'reward_anticipation', 'reward']
@@ -107,7 +121,7 @@ def randomize_blocks(num_of_blocks):
 blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = randomize_blocks(blocks)
 block_types = ['congruent', 'conflict']
-num_of_trials = 2
+num_of_trials = 30
 
 
 def get_hexagon_pts(x, y, radius):
@@ -215,27 +229,31 @@ def update_displayed_points(screen, points):
 
 
 def add_event_to_queue(subject, block_number, trial_count, event, extra_comments):
-    # port.write([event])  # Send event code to brain vision trigger box
-    # port.flush()  # flush buffer, push event to triggerbox
-    # time.sleep(pulse_width)  # hold on for pulse witdth duration
-    # port.write([0x00])
-
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
                      block_number, trial_count, current_state, event, extra_comments])
+    # port.write([event])  # Send event code to brain vision trigger box
+    # port.flush()  # flush buffer, push event to triggerbox
+    toggle_photodiode_circle(True)
+    time.sleep(pulse_width)  # hold on for pulse witdth duration
+    # port.write([0x00])
+    toggle_photodiode_circle(False)
+    
     return
 
 
 def toggle_photodiode_circle(photodiode_bool):
+    color = WHITE if photodiode_bool else BLACK
     border_rect_coords = np.array(
         size) - np.array([photodiode_length, photodiode_length])/2 - 65
-    pygame.draw.circle(screen, WHITE, border_rect_coords,
+    pygame.draw.circle(screen, color, border_rect_coords,
                        photodiode_length/2-5)
+    pygame.display.update()
     return
 
 
-def display_photodiode_boarder():
+def display_photodiode_border():
     border_rect_coords = np.array(
         size) - np.array([photodiode_length, photodiode_length]) - 65
     photodiode_rect = pygame.Rect(
@@ -252,31 +270,30 @@ def write_all_events_to_csv(logger_file_name):
             file.close()
     return
 
-
-def display_text_to_continue():
-    my_font = pygame.font.SysFont("Arial", int(size[0]/75))
-    text_surf = my_font.render("Press Enter to Continue", True, WHITE)
-    screen.blit(text_surf, (size[0]/2 - text_surf.get_width() /
-                2, 3*size[1]/4 - text_surf.get_height() - 50))
-
-
-def display_arrow_key_options():
-    arrowkey_target = pygame.image.load(
-        task_directory + "/media/images/arrow_keys.png").convert()
-    arrowkey_target = pygame.transform.scale_by(arrowkey_target, 0.25)
-    arrowkey_rect = arrowkey_target.get_rect()
-    arrow_key_coords = np.array(
-        size) - np.array([arrowkey_rect.w/2+size[0]/2, arrowkey_rect.h + size[1]/36])
-    screen.blit(arrowkey_target, arrow_key_coords)
-
+def display_left_arrow_key():
+    left_arrow_target = pygame.image.load(task_directory + "/media/images/left_arrow.png").convert()
+    left_arrow_target =  pygame.transform.scale_by(left_arrow_target, 0.25)
+    left_arrow_rect = left_arrow_target.get_rect()
+    left_arrow_coords = np.array(size) - np.array([left_arrow_rect.w/2+size[0]/2+size[0]/30, left_arrow_rect.h + size[1]/36])
+    screen.blit(left_arrow_target, left_arrow_coords)
     my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     text_surf_l = my_font.render("Previous", True, WHITE)
-    text_surf_r = my_font.render("Next", True, WHITE)
-    screen.blit(text_surf_l, (arrow_key_coords[0]-text_surf_l.get_width(
-    ), arrow_key_coords[1]-1.5*text_surf_l.get_height()+arrowkey_target.get_height()))
-    screen.blit(text_surf_r, (arrow_key_coords[0]+arrowkey_target.get_width(
-    ), arrow_key_coords[1]-1.5*text_surf_r.get_height()+arrowkey_target.get_height()))
+    screen.blit(text_surf_l, (left_arrow_coords[0]-text_surf_l.get_width()-size[0]/200, left_arrow_coords[1] + size[1]/200))#-1.
 
+def display_right_arrow_key():
+    right_arrow_target = pygame.image.load(task_directory + "/media/images/right_arrow.png").convert()
+    right_arrow_target =  pygame.transform.scale_by(right_arrow_target, 0.25)
+    right_arrow_rect = right_arrow_target.get_rect()
+    right_arrow_coords = np.array(size) - np.array([right_arrow_rect.w/2+size[0]/2-size[0]/30, right_arrow_rect.h + size[1]/36])
+    screen.blit(right_arrow_target, right_arrow_coords)
+    my_font = pygame.font.SysFont("Arial", int(size[0]/80))
+    text_surf_r = my_font.render("Next", True, WHITE)
+    screen.blit(text_surf_r, (right_arrow_coords[0]+right_arrow_target.get_width()+size[0]/200, right_arrow_coords[1] + size[1]/200))
+
+def display_arrow_key_options():
+    display_left_arrow_key()
+    display_right_arrow_key()
+   
 
 def display_id_query(user_text_subj_id, user_text_study_id, toggle):
     screen.fill(BLACK)
@@ -308,8 +325,7 @@ def display_id_query(user_text_subj_id, user_text_study_id, toggle):
         size[0]+txtsurf_subj.get_width())/2-10, size[1]/2 - subj_text_surface.get_height()/2))
     screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-40,
                 size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()))
-
-    display_text_to_continue()
+    display_right_arrow_key()
     pygame.display.update()
 
 
@@ -318,7 +334,6 @@ def display_task_name():
     task_name = FONT.render("Approach Avoidance Conflict Task", True, WHITE)
     screen.blit(task_name, (size[0]/2 - task_name.get_width() /
                 2, size[1]/2 - task_name.get_height()/2))
-    display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
 
@@ -329,43 +344,58 @@ def display_audio_video_alignment():
     task_name = FONT.render("Set Volume to 50/100.", True, WHITE)
     screen.blit(task_name, (size[0]/2 - task_name.get_width() /
                 2, size[1]/2 - task_name.get_height()/2))
-    display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
 
 
-def display_welcome():
+def display_welcome1():
     screen.fill(BLACK)
+    draw_circle(screen, GREEN, circle_coords,
+                    shape_size/2)
+    draw_square(screen, BLUE, pygame.Rect(
+            square_coords, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2)))
+    draw_hexagon(
+            screen, YELLOW, hexagon_coords[0], hexagon_coords[1], shape_size/2)\
+    
     my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     task_txt = FONT.render("Welcome!", True, WHITE)
     prompt_txt1 = my_font.render(
-        "During the task, you will be asked to select between three shapes using the 1, 2, or 3 button keys, after which an image will appear and points will be awarded. ", True, WHITE)
+        "During the task, you will be asked to select between three shapes on the screen.", True, WHITE)
     prompt_txt2 = my_font.render(
-        "The goal of the task is to maximize your score. Each shape will have a different probability of displaying a neutral or anxiety-provoking image and different", True, WHITE)
+        " using either the 1, 2, or 3 key on the keyboard,", True, WHITE)
     prompt_txt3 = my_font.render(
-        "probabilities for either gaining or losing points for that trial. These probabilities will stay consistent within a single block. There will be", True, WHITE)
-    prompt_txt4 = my_font.render(
-        "two types of blocks: congruent and conflict blocks. Decisions during congruent trials will award more points for displaying neutral images", True, WHITE)
-    prompt_txt5 = my_font.render(
-        "or take points away for displaying provoking images, while conflict trials will awards more points for displaying provoking images", True, WHITE)
-    prompt_txt6 = my_font.render(
-        " and take points away for displaying neutral images.", True, WHITE)
+        "after which an image will appear and points will be awarded.", True, WHITE)
 
-    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
-                2, size[1]/3 - task_txt.get_height()/2))
-    screen.blit(prompt_txt1, (size[0]/2 - prompt_txt1.get_width()/2,
-                size[1]/3 - prompt_txt1.get_height()/2+task_txt.get_height()))
-    screen.blit(prompt_txt2, (size[0]/2 - prompt_txt1.get_width()/2,
-                size[1]/3 - prompt_txt1.get_height()/2+prompt_txt1.get_height()+task_txt.get_height()))
-    screen.blit(prompt_txt3, (size[0]/2 - prompt_txt3.get_width()/2,
-                size[1]/3 - prompt_txt3.get_height()/2+prompt_txt2.get_height()+prompt_txt1.get_height()+task_txt.get_height()))
-    screen.blit(prompt_txt4, (size[0]/2 - prompt_txt4.get_width()/2,
-                size[1]/3 - prompt_txt4.get_height()/2+prompt_txt1.get_height()+prompt_txt2.get_height()+prompt_txt3.get_height()+task_txt.get_height()))
-    screen.blit(prompt_txt5, (size[0]/2 - prompt_txt5.get_width()/2,
-                size[1]/3 - prompt_txt5.get_height()/2+prompt_txt1.get_height()+prompt_txt2.get_height()+prompt_txt3.get_height()+prompt_txt4.get_height()+task_txt.get_height()))
-    screen.blit(prompt_txt6, (size[0]/2 - prompt_txt6.get_width()/2,
-                size[1]/3 - prompt_txt6.get_height()/2+prompt_txt1.get_height()+prompt_txt2.get_height()+prompt_txt3.get_height()+prompt_txt4.get_height()+prompt_txt5.get_height()+task_txt.get_height()))
-    display_text_to_continue()
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /2, size[1]/3 - task_txt.get_height()/2+shape_size/3.70))
+    screen.blit(prompt_txt1, (size[0]/2 - prompt_txt1.get_width()/2,size[1]/3 - prompt_txt1.get_height()/2+task_txt.get_height()+shape_size/4))
+    screen.blit(prompt_txt2, (size[0]/2 - prompt_txt2.get_width()/2,size[1]/3 - prompt_txt2.get_height()/2+prompt_txt1.get_height()+task_txt.get_height()+shape_size/4))
+    screen.blit(prompt_txt3, (size[0]/2 - prompt_txt3.get_width()/2,size[1]/3 - prompt_txt3.get_height()/2+prompt_txt2.get_height()+prompt_txt1.get_height()+task_txt.get_height()+shape_size/4))
+    
+    display_arrow_key_options()
+    pygame.display.update()
+
+def display_welcome2():
+    screen.fill(BLACK)
+    draw_circle(screen, GREEN, circle_coords,
+                    shape_size/2)
+    draw_square(screen, BLUE, pygame.Rect(
+            square_coords, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2)))
+    draw_hexagon(
+            screen, YELLOW, hexagon_coords[0], hexagon_coords[1], shape_size/2)\
+    
+    my_font = pygame.font.SysFont("Arial", int(size[0]/80))
+    task_txt = FONT.render("Welcome!", True, WHITE)
+    prompt_txt1 = my_font.render(
+        "The goal of the task is to maximize your score. Each shape will have a different probability for", True, WHITE)
+    prompt_txt2 = my_font.render(
+        "displaying a neutral or anxiety-provoking image after which an image and", True, WHITE)
+    prompt_txt3 = my_font.render(
+        "different probabilities for either gaining or losing points for that trial.", True, WHITE)
+
+    screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /2, size[1]/3 - task_txt.get_height()/2+shape_size/3.7))
+    screen.blit(prompt_txt1, (size[0]/2 - prompt_txt1.get_width()/2,size[1]/3 - prompt_txt1.get_height()/2+task_txt.get_height()+shape_size/4))
+    screen.blit(prompt_txt2, (size[0]/2 - prompt_txt2.get_width()/2,size[1]/3 - prompt_txt2.get_height()/2+prompt_txt1.get_height()+task_txt.get_height()+shape_size/4))
+    screen.blit(prompt_txt3, (size[0]/2 - prompt_txt3.get_width()/2,size[1]/3 - prompt_txt3.get_height()/2+prompt_txt2.get_height()+prompt_txt1.get_height()+task_txt.get_height()+shape_size/4))
     display_arrow_key_options()
     pygame.display.update()
 
@@ -382,7 +412,6 @@ def display_fixation_instructions():
     screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2,
                 size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
     display_fixation()
-    display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
 
@@ -398,7 +427,6 @@ def display_practice_instructions():
                 2, size[1]/3 - task_txt.get_height()/2))
     screen.blit(prompt_txt, (size[0]/2 - prompt_txt.get_width()/2,
                 size[1]/3 - prompt_txt.get_height()/2+task_txt.get_height()))
-    display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
 
@@ -411,7 +439,6 @@ def display_movement_warning():
     screen.blit(task_txt, (size[0]/2 - task_txt.get_width() /
                 2, size[1]/3 - task_txt.get_height()/2))
     display_fixation()
-    display_text_to_continue()
     display_arrow_key_options()
     pygame.display.update()
 

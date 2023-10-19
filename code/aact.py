@@ -12,20 +12,6 @@ toggle_enter_id = True
 has_entered_id = False
 is_practice_trial = False
 
-# provides offset so center of object is at desired coordinates
-circle_center_offset = np.array([0, 0])
-circle_coords = main_center_coords[0, :] - circle_center_offset
-
-# provides offset so center of object is at desired coordinates
-square_center_offset = np.array(
-    [math.sqrt(3)*shape_size/4, math.sqrt(3)*shape_size/4])
-square_coords = main_center_coords[1, :] - square_center_offset
-
-# provides offset so center of object is at desired coordinates
-hexagon_center_offset = np.array(
-    [-math.sqrt(3)*shape_size/4, (shape_size/4)])
-hexagon_coords = main_center_coords[2, :] - hexagon_center_offset
-
 trial_selection = None
 is_anticipation = False
 key_pressed = ''
@@ -36,6 +22,7 @@ active = True
 while active:
     # limit to 120 frames per second
     clock.tick(120)
+    display_photodiode_border()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             active = False
@@ -56,7 +43,7 @@ while active:
                 add_event_to_queue(subject, block_number, trial_count, 1,
                                    'Hexagon')
 
-            if loading_state < final_load_state and (event.key in [pygame.K_LEFT, pygame.K_RETURN, pygame.K_RIGHT]) and not is_practice_trial:
+            if loading_state < final_load_state and (event.key in [pygame.K_LEFT, pygame.K_RIGHT]) and not is_practice_trial:
                 if has_entered_id:
                     if event.key == pygame.K_LEFT:
                         if loading_state > 0:
@@ -71,7 +58,7 @@ while active:
                         add_event_to_queue(subject, block_number, trial_count, 12, 'Start Practice Trial')
                     elif loading_state == final_load_state-1:
                         add_event_to_queue(
-                            subject, block_number, trial_count, 0, 'Start Block (Pressed Enter)')
+                            subject, block_number, trial_count, 0, 'Start Block')
                     loading_state = loading_state + 1
                     loading_screen_state = loading_screen_state_machine[loading_state]
                     continue
@@ -84,7 +71,7 @@ while active:
                     loading_state = loading_state + 1
                     loading_screen_state = loading_screen_state_machine[loading_state]
                     image_file_names = get_image_file_names(subject)
-            elif loading_screen_state == loading_screen_state_machine[0] and event.key == pygame.K_TAB:
+            elif loading_screen_state == loading_screen_state_machine[0] and (event.key == pygame.K_TAB or event.key == pygame.K_RETURN):
                 toggle_enter_id = not toggle_enter_id
             elif loading_screen_state == loading_screen_state_machine[0] and event.key == pygame.K_BACKSPACE:
                 if toggle_enter_id:
@@ -108,8 +95,10 @@ while active:
                 display_task_name()
             case 'Audio-Video Alignment':
                 display_audio_video_alignment()
-            case 'Welcome':
-                display_welcome()
+            case 'Welcome1':
+                display_welcome1()
+            case 'Welcome2':
+                display_welcome2()
             case'Fixation Instructions':
                 display_fixation_instructions()
             case 'Start Practice Trial':
@@ -143,7 +132,7 @@ while active:
     if current_state == state_machine[0]:
         trial_selection = None
         screen.fill(BLACK)
-        display_photodiode_boarder()
+        display_photodiode_border()
         display_fixation()
         add_event_to_queue(subject, block_number, trial_count, 2,
                            'Start Trial Fix Gaze (Begin)')
@@ -153,7 +142,7 @@ while active:
         pygame.time.delay(fixed_gaze_duration)
 
         screen.fill(BLACK)
-        display_photodiode_boarder()
+        display_photodiode_border()
         update_displayed_points(screen, points)
         current_state = state_machine[1]  # Update state to Decision State
         is_first_cycle_in_decision_state = True
@@ -175,6 +164,7 @@ while active:
             square_coords, (math.sqrt(3)*shape_size/2, math.sqrt(3)*shape_size/2)))
         draw_hexagon(
             screen, YELLOW, hexagon_coords[0], hexagon_coords[1], shape_size/2)
+        display_fixation()
         if is_first_cycle_in_decision_state:
             add_event_to_queue(subject, block_number, trial_count, 4,
                                'Display Trial Options')
@@ -207,7 +197,7 @@ while active:
 
     elif current_state == state_machine[2]:  # If Stimulus Anticipation State
         screen.fill(BLACK)
-        display_photodiode_boarder()
+        display_photodiode_border()
         display_fixation()
         add_event_to_queue(subject, block_number, trial_count, 5,
                            'Stimulius Anticipation Fix Gaze (Start)')
@@ -235,7 +225,7 @@ while active:
 
     elif current_state == state_machine[4]:  # If Reward Anticipation State
         screen.fill(BLACK)
-        display_photodiode_boarder()
+        display_photodiode_border()
         display_fixation()
         add_event_to_queue(subject, block_number, trial_count, 9,
                            'Reward Anticipation Fix Gaze (Start)')
@@ -266,8 +256,7 @@ while active:
             is_practice_trial = False  # End Practice Trial
             add_event_to_queue(subject, block_number, trial_count, 12, 'End Practice Trial')
 
-    display_photodiode_boarder()
-    toggle_photodiode_circle(photodiode_bool)
+    display_photodiode_border()
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 
