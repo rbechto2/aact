@@ -32,7 +32,7 @@ NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
 photodiode_length = 75  # 75-PD patients 65-provocation patients
 photodiode_bool = True
-pulse_width = .01  # for signal sent to brain trigger box?
+pulse_width = .05  # for signal sent to brain trigger box?
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
@@ -80,7 +80,7 @@ def find_brain_vision_tiggerbox_port():
             return port
 
 
-# port = serial.Serial(find_brain_vision_tiggerbox_port())
+port = serial.Serial(find_brain_vision_tiggerbox_port())
 
 
 def create_log_file(subject, study):
@@ -101,12 +101,10 @@ def create_log_file(subject, study):
         file.close()
     return logger_file_name
 
-
 def get_image_file_names(subject):
     image_names = [os.listdir(home_directory + '/Desktop/provocation-images/' + subject + '/provoking'),
                    os.listdir(home_directory + '/Desktop/provocation-images/' + subject + '/neutral')]
     return image_names
-
 
 def randomize_blocks(num_of_blocks):
     k = 50  # 50% congruent - 50% conflict
@@ -116,7 +114,6 @@ def randomize_blocks(num_of_blocks):
     booleans[:int(k / 100 * num_of_blocks)] = True
     np.random.shuffle(booleans)  # Shuffle the array
     return booleans
-
 
 blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = randomize_blocks(blocks)
@@ -233,11 +230,11 @@ def add_event_to_queue(subject, block_number, trial_count, event, extra_comments
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
                      block_number, trial_count, current_state, event, extra_comments])
-    # port.write([event])  # Send event code to brain vision trigger box
-    # port.flush()  # flush buffer, push event to triggerbox
+    port.write([event])  # Send event code to brain vision trigger box
+    port.flush()  # flush buffer, push event to triggerbox
     toggle_photodiode_circle(True)
     time.sleep(pulse_width)  # hold on for pulse witdth duration
-    # port.write([0x00])
+    port.write([0x00])
     toggle_photodiode_circle(False)
     
     return
@@ -263,7 +260,7 @@ def display_photodiode_border():
 
 def write_all_events_to_csv(logger_file_name):
     if not logger_queue.empty():
-        with open(logger_file_name, 'a') as file:
+        with open(logger_file_name, 'a',newline='\n') as file:
             writer = csv.writer(file)
             for i in range(logger_queue.qsize()):
                 writer.writerow(logger_queue.get())
@@ -288,6 +285,7 @@ def display_right_arrow_key():
     screen.blit(right_arrow_target, right_arrow_coords)
     my_font = pygame.font.SysFont("Arial", int(size[0]/80))
     text_surf_r = my_font.render("Next", True, WHITE)
+    display_photodiode_border()
     screen.blit(text_surf_r, (right_arrow_coords[0]+right_arrow_target.get_width()+size[0]/200, right_arrow_coords[1] + size[1]/200))
 
 def display_arrow_key_options():
@@ -312,19 +310,15 @@ def display_id_query(user_text_subj_id, user_text_study_id, toggle):
         ).bottomleft, txtsurf_study.get_rect().bottomright, 5)
         pygame.draw.line(study_text_surface, WHITE, study_text_surface.get_rect(
         ).bottomleft, study_text_surface.get_rect().bottomright, 5)
-
+    print(size)
     # Display "Subject ID"
-    screen.blit(txtsurf_subj, (size[0]/2 - txtsurf_subj.get_width() /
-                2-10, size[1]/2 - txtsurf_subj.get_height()/2))
+    screen.blit(txtsurf_subj, (size[0]/2 - txtsurf_subj.get_width()/ 2-size[0]/256, size[1]/2 - txtsurf_subj.get_height()/2))
     # Display "Study ID"
-    screen.blit(txtsurf_study, (size[0]/2 - txtsurf_subj.get_width()/2-10,
-                size[1]/2 - txtsurf_subj.get_height()/2+txtsurf_subj.get_height()))
+    screen.blit(txtsurf_study, (size[0]/2 - txtsurf_subj.get_width()/2-size[0]/256, size[1]/2 - txtsurf_subj.get_height()/2+txtsurf_subj.get_height()))
 
     # render at position stated in arguments
-    screen.blit(subj_text_surface, ((
-        size[0]+txtsurf_subj.get_width())/2-10, size[1]/2 - subj_text_surface.get_height()/2))
-    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-40,
-                size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()))
+    screen.blit(subj_text_surface, ((size[0]+txtsurf_subj.get_width())/2-size[0]/256, size[1]/2 - subj_text_surface.get_height()/2))
+    screen.blit(study_text_surface, ((size[0]+txtsurf_study.get_width())/2-size[0]/64,size[1]/2 - study_text_surface.get_height()/2 + txtsurf_subj.get_height()))
     display_right_arrow_key()
     pygame.display.update()
 

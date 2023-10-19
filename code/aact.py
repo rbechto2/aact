@@ -147,8 +147,7 @@ while active:
         current_state = state_machine[1]  # Update state to Decision State
         is_first_cycle_in_decision_state = True
         pygame.event.clear()
-        add_event_to_queue(subject, block_number, trial_count, 3,
-                           'Start Trial Fix Gaze (End)')
+        #add_event_to_queue(subject, block_number, trial_count, 3,'Start Trial Fix Gaze (End)')
         trial_time = 0
         clock.tick()
 
@@ -207,8 +206,7 @@ while active:
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[3]  # Update state to Decision State
-        add_event_to_queue(subject, block_number, trial_count, 6,
-                           'Stimulius Anticipation Fix Gaze (End)')
+        #add_event_to_queue(subject, block_number, trial_count, 6, 'Stimulius Anticipation Fix Gaze (End)')
 
     elif current_state == state_machine[3]:  # If Stimulus state
         stimulus_image = display_stimulus(
@@ -220,8 +218,7 @@ while active:
         stimulus_duration = random.randrange(1500, 2500, 5)
         pygame.time.delay(stimulus_duration)
         current_state = state_machine[4]
-        add_event_to_queue(subject, block_number,
-                           trial_count, 8, 'End Stimulus')
+        #add_event_to_queue(subject, block_number, trial_count, 8, 'End Stimulus')
 
     elif current_state == state_machine[4]:  # If Reward Anticipation State
         screen.fill(BLACK)
@@ -235,8 +232,7 @@ while active:
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[5]  # Update state to Decision State
-        add_event_to_queue(subject, block_number, trial_count, 10,
-                           'Reward Anticipation Fix Gaze (End)')
+        #add_event_to_queue(subject, block_number, trial_count, 10, 'Reward Anticipation Fix Gaze (End)')
 
     elif current_state == state_machine[5]:  # If Reward state
         trial_points = generate_trial_points(
@@ -260,5 +256,5 @@ while active:
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 
-# port.close()
+port.close()
 pygame.quit()
