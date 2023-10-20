@@ -10,6 +10,7 @@ import serial.tools.list_ports
 import os
 from enum import IntEnum
 import time
+import pandas as pd
 
 
 pygame.init()
@@ -17,6 +18,10 @@ pygame.mixer.init()
 task_directory = os.path.dirname(os.path.dirname(__file__))
 home_directory = os.path.expanduser('~')
 pygame.mixer.music.load(task_directory + '/media/audio/beep.mp3')
+
+#Psuedorandomization
+random_set = pd.read_csv(task_directory + '/code/pseudorandom_set1.csv')['value'].to_numpy()
+random_set_index = 0 
 
 # Define some constants
 BLACK = (0, 0, 0)
@@ -44,7 +49,7 @@ size = screen.get_size()
 main_center_coords = np.array(
     [[size[0]/4, 2*size[1]/3], [size[0]/2, size[1]/4], [3*size[0]/4, 2*size[1]/3]])
 shape_size = size[0]/5
-
+print(size)
 # provides offset so center of object is at desired coordinates
 circle_center_offset = np.array([0, 0])
 circle_coords = main_center_coords[0, :] - circle_center_offset
@@ -174,13 +179,20 @@ def display_fixation():
                 np.array([gaze_rect.w, gaze_rect.h])/2)
 
 
+def calculate_pseudorandom_outcome(random_set_index, threshold):
+    if random_set[random_set_index] <= threshold:
+        return 0
+    else:
+        return 1
+
 def generate_trial_points(block_type, shape, is_practice_trial):
     if is_practice_trial:
         return 10  # If practice Trial give Postive reward
     trial_reward_prob = reward_conflict_prob[block_type][shape][0]
-    sign = np.random.choice(
-        [1, -1], p=[trial_reward_prob, 1-trial_reward_prob])
-    points = sign * random.randint(1, 10)
+    which_sign = calculate_pseudorandom_outcome(random_set_index,trial_reward_prob)
+    sign = [1, -1]
+    #sign = np.random.choice([1, -1], p=[trial_reward_prob, 1-trial_reward_prob])\
+    points = sign[which_sign] * random.randint(1, 10)
     return points
 
 
@@ -203,6 +215,7 @@ def display_stimulus(screen, block, shape, subject, image_file_names, is_practic
     trial_prov_prob = reward_conflict_prob[block][shape][1]
     image_type = np.random.choice(
         [0, 1], p=[trial_prov_prob, 1-trial_prov_prob])
+    image_type = calculate_pseudorandom_outcome(random_set_index,trial_prov_prob)
     if is_practice_trial:
         image_type = 1  # If practice Trial give neutral Image
     which_image = image_file_names[image_type][random.randint(0, 9)]
