@@ -60,7 +60,7 @@ while active:
                             subject, block_number, trial_count, 0, 'Start Practice Trial')
                     elif loading_state == final_load_state-1:
                         add_event_to_queue(subject, block_number,
-                                   trial_count, 1, 'Start Block')
+                                           trial_count, 1, 'Start Block')
                     loading_state = loading_state + 1
                     loading_screen_state = loading_screen_state_machine[loading_state]
                     continue
@@ -270,5 +270,5 @@ while active:
     pygame.display.update()
     write_all_events_to_csv(logger_file_name)
 
-# port.close()
+port.close()
 pygame.quit()
