@@ -87,7 +87,7 @@ def find_brain_vision_tiggerbox_port():
             return port
 
 
-# port = serial.Serial(find_brain_vision_tiggerbox_port())
+port = serial.Serial(find_brain_vision_tiggerbox_port())
 
 
 def create_log_file(subject, study):
@@ -253,12 +253,12 @@ def add_event_to_queue(subject, block_number, trial_count, event, extra_comments
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
                      block_number, trial_count, current_state, event, extra_comments])
-    # port.write([event])  # Send event code to brain vision trigger box
-    # port.flush()  # flush buffer, push event to triggerbox
-    # toggle_photodiode_circle(True)
-    # time.sleep(pulse_width)  # hold on for pulse witdth duration
-    # port.write([0x00])
-    # toggle_photodiode_circle(False)
+    port.write([event])  # Send event code to brain vision trigger box
+    port.flush()  # flush buffer, push event to triggerbox
+    toggle_photodiode_circle(True)
+    time.sleep(pulse_width)  # hold on for pulse witdth duration
+    port.write([0x00])
+    toggle_photodiode_circle(False)
 
     return
 
