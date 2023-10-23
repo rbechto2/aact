@@ -68,8 +68,8 @@ clock = pygame.time.Clock()
 
 loading_screen_state_machine = [
     'Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome1', 'Welcome2',
-    'Welcome3', 'Welcome4', 'Welcome5', 'Welcome6', 'Fixation Instructions',
-    'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start', 'Countdown']
+    'Welcome3', 'Welcome4', 'Welcome5', 'Welcome6', 'Welcome7', 'Welcome8', 'Welcome9', 'Fixation Instructions',
+    'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start', 'Between Block', 'Countdown']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
 final_load_state = len(loading_screen_state_machine) - 1
@@ -87,7 +87,7 @@ def find_brain_vision_tiggerbox_port():
             return port
 
 
-port = serial.Serial(find_brain_vision_tiggerbox_port())
+# port = serial.Serial(find_brain_vision_tiggerbox_port())
 
 
 def create_log_file(subject, study):
@@ -128,7 +128,7 @@ def order_blocks(num_of_blocks):
 blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = order_blocks(blocks)
 block_types = ['congruent', 'conflict']
-num_of_trials = 30
+num_of_trials = 2
 
 
 def get_hexagon_pts(x, y, radius):
@@ -201,7 +201,7 @@ def generate_trial_points(block_type, shape, is_practice_trial, random_set_index
         random_set_index, trial_reward_prob)
     sign = [1, -1]
     # sign = np.random.choice([1, -1], p=[trial_reward_prob, 1-trial_reward_prob])\
-    points = sign[which_sign] * random.randint(1, 10) + 10
+    points = sign[which_sign] * random.randint(1, 10)
     return points, random_set_index
 
 
@@ -253,12 +253,12 @@ def add_event_to_queue(subject, block_number, trial_count, event, extra_comments
     block_type = block_types[block_order[block_number-1]]  # Congruent/Conflict
     logger_queue.put([timestamp, subject, block_type,
                      block_number, trial_count, current_state, event, extra_comments])
-    port.write([event])  # Send event code to brain vision trigger box
-    port.flush()  # flush buffer, push event to triggerbox
-    toggle_photodiode_circle(True)
-    time.sleep(pulse_width)  # hold on for pulse witdth duration
-    port.write([0x00])
-    toggle_photodiode_circle(False)
+    # port.write([event])  # Send event code to brain vision trigger box
+    # port.flush()  # flush buffer, push event to triggerbox
+    # toggle_photodiode_circle(True)
+    # time.sleep(pulse_width)  # hold on for pulse witdth duration
+    # port.write([0x00])
+    # toggle_photodiode_circle(False)
 
     return
 

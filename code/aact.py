@@ -58,6 +58,9 @@ while active:
                     elif loading_screen_state == 'Start Practice Trial':
                         add_event_to_queue(
                             subject, block_number, trial_count, 0, 'Start Practice Trial')
+                    elif loading_screen_state == 'Wait to Start':
+                        if block_number == 1:
+                            loading_state = loading_state + 1  # Skip between trial note
                     elif loading_state == final_load_state-1:
                         add_event_to_queue(subject, block_number,
                                            trial_count, 1, 'Start Block')
@@ -109,8 +112,14 @@ while active:
                 display_welcome(5)
             case 'Welcome6':
                 display_welcome(6)
-            case'Fixation Instructions':
+            case 'Welcome7':
                 display_welcome(7)
+            case 'Welcome8':
+                display_welcome(8)
+            case 'Welcome9':
+                display_welcome(9)
+            case'Fixation Instructions':
+                display_welcome(10)
                 display_fixation()
             case 'Start Practice Trial':
                 display_practice_instructions()
@@ -125,6 +134,8 @@ while active:
                 random_set_index = 0  # reset pseudorandom value to first one after practice trial
             case 'Wait to Start':
                 display_wait_to_start(block_number)
+            case 'Between Block':
+                display_welcome(11)
             case 'Countdown':
                 display_countdown()
                 loading_state = loading_state + 1
@@ -137,7 +148,7 @@ while active:
         trial_count = 0
         block_number = block_number + 1
         current_state = state_machine[0]
-        loading_state = final_load_state - 1
+        loading_state = final_load_state - 2  # wait to start
         loading_screen_state = loading_screen_state_machine[loading_state]
         continue
 
