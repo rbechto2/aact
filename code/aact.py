@@ -61,6 +61,8 @@ while active:
                     elif loading_screen_state == 'Wait to Start':
                         if block_number == 1:
                             loading_state = loading_state + 1  # Skip between trial note
+                            add_event_to_queue(
+                                subject, block_number, trial_count, 1, 'Start Block')
                     elif loading_state == final_load_state-1:
                         add_event_to_queue(subject, block_number,
                                            trial_count, 1, 'Start Block')
@@ -118,8 +120,10 @@ while active:
                 display_welcome(8)
             case 'Welcome9':
                 display_welcome(9)
-            case'Fixation Instructions':
+            case 'Welcome10':
                 display_welcome(10)
+            case'Fixation Instructions':
+                display_welcome(11)
                 display_fixation()
             case 'Start Practice Trial':
                 display_practice_instructions()
@@ -135,7 +139,7 @@ while active:
             case 'Wait to Start':
                 display_wait_to_start(block_number)
             case 'Between Block':
-                display_welcome(11)
+                display_welcome(12)
             case 'Countdown':
                 display_countdown()
                 loading_state = loading_state + 1
@@ -162,7 +166,7 @@ while active:
                            'Start Trial Fix Gaze')
         pygame.display.update()
         # Jitter stimulus presentation (.5s-1.5s)
-        fixed_gaze_duration = random.randrange(500, 1500, 5)
+        fixed_gaze_duration = random.randrange(1000, 2000, 5)
         pygame.time.delay(fixed_gaze_duration)
 
         screen.fill(BLACK)
@@ -229,7 +233,7 @@ while active:
                            'Stimulius Anticipation Fix Gaze')
         pygame.display.update()
         anticipation_fixed_gaze_duration = random.randrange(
-            500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
+            1000, 2500, 5)  # Jitter stimulus presentation (1s-2.5s)
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[3]  # Update state to Decision State
@@ -241,7 +245,7 @@ while active:
         add_event_to_queue(subject, block_number,
                            trial_count, 6, stimulus_image)
         pygame.display.update()
-        stimulus_duration = random.randrange(1500, 2500, 5)
+        stimulus_duration = random.randrange(2500, 3500, 5)
         pygame.time.delay(stimulus_duration)
         current_state = state_machine[4]
 
@@ -253,7 +257,7 @@ while active:
                            7, 'Reward Anticipation Fix Gaze')
         pygame.display.update()
         anticipation_fixed_gaze_duration = random.randrange(
-            500, 1500, 5)  # Jitter stimulus presentation (.5s-1.5s)
+            1000, 2500, 5)  # Jitter stimulus presentation (1.5s-2.5s)
         pygame.time.delay(anticipation_fixed_gaze_duration)
         screen.fill(BLACK)
         current_state = state_machine[5]  # Update state to Decision State
@@ -268,7 +272,7 @@ while active:
         pygame.display.update()
         add_event_to_queue(subject, block_number, trial_count,
                            8, str(trial_points) + " points")
-        points_display_duration = random.randrange(500, 750, 5)
+        points_display_duration = random.randrange(2500, 3500, 5)
         pygame.time.delay(points_display_duration)
         current_state = state_machine[0]
         trial_count = trial_count + 1

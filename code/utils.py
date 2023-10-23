@@ -68,7 +68,7 @@ clock = pygame.time.Clock()
 
 loading_screen_state_machine = [
     'Enter IDs', 'Display Task Name', 'Audio-Video Alignment', 'Welcome1', 'Welcome2',
-    'Welcome3', 'Welcome4', 'Welcome5', 'Welcome6', 'Welcome7', 'Welcome8', 'Welcome9', 'Fixation Instructions',
+    'Welcome3', 'Welcome4', 'Welcome5', 'Welcome6', 'Welcome7', 'Welcome8', 'Welcome9', 'Welcome10', 'Fixation Instructions',
     'Start Practice Trial', 'Is Practice Trial', 'Movement Warning', 'Wait to Start', 'Between Block', 'Countdown']
 loading_state = 0
 loading_screen_state = loading_screen_state_machine[loading_state]
@@ -128,7 +128,7 @@ def order_blocks(num_of_blocks):
 blocks = 2  # Should be even so equal number of congruent and conflict blocks
 block_order = order_blocks(blocks)
 block_types = ['congruent', 'conflict']
-num_of_trials = 2
+num_of_trials = 30
 
 
 def get_hexagon_pts(x, y, radius):
