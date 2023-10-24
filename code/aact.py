@@ -57,7 +57,7 @@ while active:
                             subject, block_number, trial_count, 0x15, 'Start Task')
                     elif loading_screen_state == 'Start Practice Trial':
                         add_event_to_queue(
-                            subject, block_number, trial_count, 0, 'Start Practice Trial')
+                            subject, block_number, trial_count, 10, 'Start Practice Trial')
                     elif loading_screen_state == 'Wait to Start':
                         if block_number == 1:
                             loading_state = loading_state + 1  # Skip between trial note
@@ -279,7 +279,7 @@ while active:
         if is_practice_trial:
             is_practice_trial = False  # End Practice Trial
             add_event_to_queue(subject, block_number,
-                               trial_count, 0, 'End Practice Trial')
+                               trial_count, 10, 'End Practice Trial')
 
     display_photodiode_border()
     pygame.display.update()
