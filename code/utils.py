@@ -37,7 +37,7 @@ NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
 photodiode_length = 75  # 75-PD patients 65-provocation patients
 photodiode_bool = True
-pulse_width = .05  # for signal sent to brain trigger box?
+pulse_width = .03  # for signal sent to brain trigger box?
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]

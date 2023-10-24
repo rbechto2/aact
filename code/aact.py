@@ -30,19 +30,21 @@ while active:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 active = False  # Set running to False to end the while loop.
-
             elif event.key == pygame.K_1 and current_state == state_machine[1]:
                 key_pressed = '1'
                 add_event_to_queue(subject, block_number, trial_count, 4,
                                    'Circle')
+                break
             elif event.key == pygame.K_2 and current_state == state_machine[1]:
                 key_pressed = '2'
                 add_event_to_queue(subject, block_number, trial_count, 4,
                                    'Square')
+                break
             elif event.key == pygame.K_3 and current_state == state_machine[1]:
                 key_pressed = '3'
                 add_event_to_queue(subject, block_number, trial_count, 4,
                                    'Hexagon')
+                break
 
             if loading_state < final_load_state and (event.key in [pygame.K_LEFT, pygame.K_RIGHT]) and not is_practice_trial:
                 if has_entered_id:
