@@ -22,7 +22,7 @@ random_set_index = 0
 active = True
 while active:
     # limit to 120 frames per second
-    clock.tick(120)
+    clock.tick(60)
     display_photodiode_border()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

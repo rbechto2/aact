@@ -37,7 +37,7 @@ NUM_SIDES = 6
 TRANSPARENT = (0, 0, 0, 0)
 photodiode_length = 75  # 75-PD patients 65-provocation patients
 photodiode_bool = True
-pulse_width = .03  # for signal sent to brain trigger box?
+pulse_width = .06  # for signal sent to brain trigger box?
 probs = np.array([.20, .50, .80])
 logger_queue = Queue()
 # [2x3x2] -> [block_type,shape,[reward prob, conflict prob]
@@ -107,7 +107,7 @@ def create_log_file(subject, study):
                         'block', 'trial', 'state', 'event', 'extra_comments'])
         file.close()
     return logger_file_name
-
+ 
 
 def get_image_file_names(subject):
     image_names = [os.listdir(home_directory + '/Desktop/provocation-images/' + subject + '/provoking'),
@@ -258,7 +258,9 @@ def add_event_to_queue(subject, block_number, trial_count, event, extra_comments
     toggle_photodiode_circle(True)
     time.sleep(pulse_width)  # hold on for pulse witdth duration
     port.write([0x00])
+    port.flush() 
     toggle_photodiode_circle(False)
+    time.sleep(pulse_width)
 
     return
 
